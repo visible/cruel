@@ -460,6 +460,196 @@ describe("createCruel", () => {
   })
 })
 
+describe("cruel.circuitBreaker", () => {
+  test("creates circuit breaker", () => {
+    const fn = async () => "ok"
+    const cb = cruel.circuitBreaker(fn, { threshold: 3, timeout: 1000 })
+    expect(cb.getState().state).toBe("closed")
+  })
+
+  test("opens after threshold failures", async () => {
+    let calls = 0
+    const fn = async () => {
+      calls++
+      throw new Error("fail")
+    }
+    const cb = cruel.circuitBreaker(fn, { threshold: 2, timeout: 1000 })
+
+    try { await cb() } catch {}
+    expect(cb.getState().state).toBe("closed")
+
+    try { await cb() } catch {}
+    expect(cb.getState().state).toBe("open")
+  })
+
+  test("rejects when open", async () => {
+    const fn = async () => { throw new Error("fail") }
+    const cb = cruel.circuitBreaker(fn, { threshold: 1, timeout: 10000 })
+
+    try { await cb() } catch {}
+    await expect(cb()).rejects.toThrow("circuit breaker is open")
+  })
+
+  test("reset clears state", async () => {
+    const fn = async () => { throw new Error("fail") }
+    const cb = cruel.circuitBreaker(fn, { threshold: 1, timeout: 1000 })
+
+    try { await cb() } catch {}
+    expect(cb.getState().state).toBe("open")
+
+    cb.reset()
+    expect(cb.getState().state).toBe("closed")
+  })
+})
+
+describe("cruel.retry", () => {
+  test("retries on failure", async () => {
+    let attempts = 0
+    const fn = async () => {
+      attempts++
+      if (attempts < 3) throw new Error("fail")
+      return "ok"
+    }
+    const retryFn = cruel.retry(fn, { attempts: 3, delay: 10 })
+    const result = await retryFn()
+    expect(result).toBe("ok")
+    expect(attempts).toBe(3)
+  })
+
+  test("throws after max attempts", async () => {
+    const fn = async () => { throw new Error("always fail") }
+    const retryFn = cruel.retry(fn, { attempts: 2, delay: 10 })
+    await expect(retryFn()).rejects.toThrow("always fail")
+  })
+
+  test("exponential backoff", async () => {
+    let attempts = 0
+    const fn = async () => {
+      attempts++
+      if (attempts < 3) throw new Error("fail")
+      return "ok"
+    }
+    const retryFn = cruel.retry(fn, {
+      attempts: 3,
+      delay: 10,
+      backoff: "exponential",
+    })
+    const start = Date.now()
+    await retryFn()
+    expect(Date.now() - start).toBeGreaterThanOrEqual(25)
+  })
+
+  test("respects retryIf", async () => {
+    let attempts = 0
+    const fn = async () => {
+      attempts++
+      throw new Error("fatal")
+    }
+    const retryFn = cruel.retry(fn, {
+      attempts: 3,
+      delay: 10,
+      retryIf: (e) => e.message !== "fatal",
+    })
+    await expect(retryFn()).rejects.toThrow("fatal")
+    expect(attempts).toBe(1)
+  })
+})
+
+describe("cruel.bulkhead", () => {
+  test("limits concurrent executions", async () => {
+    let concurrent = 0
+    let maxConcurrent = 0
+    const fn = async () => {
+      concurrent++
+      maxConcurrent = Math.max(maxConcurrent, concurrent)
+      await new Promise(r => setTimeout(r, 50))
+      concurrent--
+      return "ok"
+    }
+    const bulkhead = cruel.bulkhead(fn, { maxConcurrent: 2 })
+
+    await Promise.all([bulkhead(), bulkhead(), bulkhead()])
+    expect(maxConcurrent).toBeLessThanOrEqual(2)
+  })
+
+  test("queues excess requests", async () => {
+    let calls = 0
+    const fn = async () => {
+      calls++
+      await new Promise(r => setTimeout(r, 20))
+      return calls
+    }
+    const bulkhead = cruel.bulkhead(fn, { maxConcurrent: 1, maxQueue: 5 })
+
+    const results = await Promise.all([
+      bulkhead(),
+      bulkhead(),
+      bulkhead(),
+    ])
+    expect(results).toEqual([1, 2, 3])
+  })
+
+  test("rejects when queue full", async () => {
+    const fn = async () => {
+      await new Promise(r => setTimeout(r, 100))
+      return "ok"
+    }
+    const bulkhead = cruel.bulkhead(fn, { maxConcurrent: 1, maxQueue: 1 })
+
+    const p1 = bulkhead()
+    const p2 = bulkhead()
+    const p3 = bulkhead()
+
+    await expect(p3).rejects.toThrow("bulkhead queue full")
+    await p1
+    await p2
+  })
+})
+
+describe("cruel.withTimeout", () => {
+  test("resolves before timeout", async () => {
+    const fn = async () => {
+      await new Promise(r => setTimeout(r, 10))
+      return "ok"
+    }
+    const timeoutFn = cruel.withTimeout(fn, { ms: 100 })
+    const result = await timeoutFn()
+    expect(result).toBe("ok")
+  })
+
+  test("throws on timeout", async () => {
+    const fn = async () => {
+      await new Promise(r => setTimeout(r, 100))
+      return "ok"
+    }
+    const timeoutFn = cruel.withTimeout(fn, { ms: 10 })
+    await expect(timeoutFn()).rejects.toThrow(CruelTimeoutError)
+  })
+})
+
+describe("cruel.fallback", () => {
+  test("returns result on success", async () => {
+    const fn = async () => "ok"
+    const fallbackFn = cruel.fallback(fn, { fallback: "fallback" })
+    const result = await fallbackFn()
+    expect(result).toBe("ok")
+  })
+
+  test("returns fallback on failure", async () => {
+    const fn = async () => { throw new Error("fail") }
+    const fallbackFn = cruel.fallback(fn, { fallback: "fallback" })
+    const result = await fallbackFn()
+    expect(result).toBe("fallback")
+  })
+
+  test("calls fallback function", async () => {
+    const fn = async () => { throw new Error("fail") }
+    const fallbackFn = cruel.fallback(fn, { fallback: () => "computed" })
+    const result = await fallbackFn()
+    expect(result).toBe("computed")
+  })
+})
+
 describe("errors", () => {
   test("CruelError has code", () => {
     const err = new CruelError("test", "TEST_CODE")

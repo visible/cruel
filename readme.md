@@ -24,19 +24,18 @@
 
   bun add cruel
   npm install cruel
+  pnpm add cruel
 
 > quick start?
 
   import { cruel } from "cruel"
 
-  // wrap any function
   const api = cruel(fetch, {
-    fail: 0.1,           // 10% failure rate
-    delay: [100, 500],   // random latency
-    timeout: 0.05,       // 5% hang forever
+    fail: 0.1,
+    delay: [100, 500],
+    timeout: 0.05,
   })
 
-  // use normally
   const res = await api("https://api.example.com")
 
 > shorthand helpers?
@@ -50,102 +49,233 @@
 
 > network chaos?
 
-  cruel.network.latency(fn, [100, 500])  // add latency
-  cruel.network.packetLoss(fn, 0.1)      // 10% packet loss
-  cruel.network.disconnect(fn, 0.05)    // random disconnects
-  cruel.network.dns(fn, 0.02)           // dns failures
-  cruel.network.slow(fn)                // slow network
-  cruel.network.unstable(fn)            // unstable connection
-  cruel.network.offline(fn)             // always fail
+  cruel.network.latency(fn, [100, 500])
+  cruel.network.packetLoss(fn, 0.1)
+  cruel.network.disconnect(fn, 0.05)
+  cruel.network.dns(fn, 0.02)
+  cruel.network.slow(fn)
+  cruel.network.unstable(fn)
+  cruel.network.offline(fn)
 
 > http chaos?
 
-  cruel.http.status(fn, 500, 0.1)       // 10% return 500
-  cruel.http.status(fn, [500, 502, 503]) // random 5xx
-  cruel.http.rateLimit(fn, 0.1)         // 10% rate limit
-  cruel.http.serverError(fn, 0.1)       // random server error
-  cruel.http.clientError(fn, 0.1)       // random client error
-  cruel.http.badGateway(fn)             // 502 errors
-  cruel.http.serviceUnavailable(fn)     // 503 errors
-  cruel.http.gatewayTimeout(fn)         // 504 errors
+  cruel.http.status(fn, 500, 0.1)
+  cruel.http.status(fn, [500, 502, 503])
+  cruel.http.rateLimit(fn, 0.1)
+  cruel.http.serverError(fn, 0.1)
+  cruel.http.clientError(fn, 0.1)
+  cruel.http.badGateway(fn)
+  cruel.http.serviceUnavailable(fn)
+  cruel.http.gatewayTimeout(fn)
 
 > stream chaos?
 
-  cruel.stream.cut(fn, 0.1)       // cut stream mid-transfer
-  cruel.stream.pause(fn, 500)     // pause mid-stream
-  cruel.stream.corrupt(fn, 0.1)   // corrupt data
-  cruel.stream.truncate(fn, 0.1)  // truncate response
-  cruel.stream.slow(fn)           // slow streaming
-  cruel.stream.flaky(fn)          // unreliable stream
+  cruel.stream.cut(fn, 0.1)
+  cruel.stream.pause(fn, 500)
+  cruel.stream.corrupt(fn, 0.1)
+  cruel.stream.truncate(fn, 0.1)
+  cruel.stream.slow(fn)
+  cruel.stream.flaky(fn)
 
-> ai sdk chaos?
+> ai chaos?
 
-  cruel.ai.rateLimit(fn, 0.1)        // 429 rate limits
-  cruel.ai.overloaded(fn, 0.05)      // model overloaded
-  cruel.ai.contextLength(fn, 0.02)   // context exceeded
-  cruel.ai.contentFilter(fn, 0.01)   // content filtered
-  cruel.ai.modelUnavailable(fn)      // model not available
-  cruel.ai.slowTokens(fn, [50, 200]) // slow generation
-  cruel.ai.streamCut(fn, 0.1)        // stream dies mid-response
-  cruel.ai.partialResponse(fn, 0.1)  // incomplete response
-  cruel.ai.invalidJson(fn, 0.05)     // malformed json
-  cruel.ai.realistic(fn)             // realistic ai chaos
-  cruel.ai.nightmare(fn)             // maximum ai chaos
+  cruel.ai.rateLimit(fn, 0.1)
+  cruel.ai.overloaded(fn, 0.05)
+  cruel.ai.contextLength(fn, 0.02)
+  cruel.ai.contentFilter(fn, 0.01)
+  cruel.ai.modelUnavailable(fn)
+  cruel.ai.slowTokens(fn, [50, 200])
+  cruel.ai.streamCut(fn, 0.1)
+  cruel.ai.partialResponse(fn, 0.1)
+  cruel.ai.invalidJson(fn, 0.05)
+  cruel.ai.realistic(fn)
+  cruel.ai.nightmare(fn)
 
-> with ai sdk?
+> ai sdk v6 integration?
 
-  import { cruel } from "cruel"
-  import { generateText } from "ai"
+  import { aisdk, wrapModel, wrapProvider } from "cruel"
+  import { generateText, streamText } from "ai"
   import { openai } from "@ai-sdk/openai"
 
-  const generate = cruel.ai.realistic(async (prompt) => {
-    return generateText({
-      model: openai("gpt-4"),
-      prompt,
-    })
+  // wrap entire provider
+  const chaosOpenAI = wrapProvider(openai, {
+    rateLimit: 0.1,
+    overloaded: 0.05,
+    delay: [100, 500],
   })
 
-  // handles rate limits, timeouts, slow responses
-  const result = await generate("hello")
+  // use with generateText
+  const result = await generateText({
+    model: chaosOpenAI("gpt-4"),
+    prompt: "hello",
+  })
+
+  // or wrap individual model
+  const model = wrapModel(openai("gpt-4"), aisdk.presets.realistic)
+
+  // streaming with chaos
+  const { textStream } = await streamText({
+    model: wrapModel(openai("gpt-4"), {
+      streamCut: 0.1,
+      slowTokens: [50, 200],
+    }),
+    prompt: "hello",
+  })
+
+> ai sdk middleware?
+
+  import { aisdk } from "cruel"
+  import { wrapLanguageModel } from "ai"
+  import { openai } from "@ai-sdk/openai"
+
+  // create chaos middleware
+  const chaosMiddleware = aisdk.middleware({
+    rateLimit: 0.1,
+    overloaded: 0.05,
+    streamCut: 0.1,
+    log: true,
+  })
+
+  // wrap model with middleware
+  const model = wrapLanguageModel({
+    model: openai("gpt-4"),
+    middleware: chaosMiddleware,
+  })
+
+> ai sdk presets?
+
+  aisdk.presets.realistic    // light, production-like
+  aisdk.presets.unstable     // medium chaos
+  aisdk.presets.harsh        // aggressive chaos
+  aisdk.presets.nightmare    // extreme chaos
+  aisdk.presets.apocalypse   // everything fails
+
+> ai sdk errors?
+
+  import {
+    RateLimitError,
+    OverloadedError,
+    ContextLengthError,
+    ContentFilterError,
+    ModelUnavailableError,
+    InvalidApiKeyError,
+    QuotaExceededError,
+    StreamCutError,
+  } from "cruel"
+
+  try {
+    await generateText({ model, prompt })
+  } catch (e) {
+    if (e instanceof RateLimitError) {
+      console.log("retry after:", e.retryAfter)
+    }
+    if (e instanceof OverloadedError) {
+      console.log("model overloaded, try later")
+    }
+  }
+
+> wrap ai tools?
+
+  import { wrapTools } from "cruel"
+
+  const tools = wrapTools({
+    search: { execute: searchFn },
+    calculate: { execute: calcFn },
+  }, {
+    toolFailure: 0.1,
+    toolTimeout: 0.05,
+    delay: [50, 200],
+  })
+
+> circuit breaker?
+
+  const api = cruel.circuitBreaker(fetch, {
+    threshold: 5,     // open after 5 failures
+    timeout: 30000,   // try again after 30s
+    onOpen: () => console.log("circuit opened"),
+    onClose: () => console.log("circuit closed"),
+  })
+
+  await api("...")
+  api.getState() // { state: "closed", failures: 0 }
+
+> retry with backoff?
+
+  const api = cruel.retry(fetch, {
+    attempts: 3,
+    delay: 1000,
+    backoff: "exponential",  // fixed, linear, exponential
+    maxDelay: 10000,
+    onRetry: (attempt, error) => console.log(`retry ${attempt}`),
+    retryIf: (error) => error.status !== 404,
+  })
+
+> bulkhead?
+
+  const api = cruel.bulkhead(fetch, {
+    maxConcurrent: 10,   // max parallel requests
+    maxQueue: 100,       // max queued requests
+    onReject: () => console.log("rejected"),
+  })
+
+> timeout wrapper?
+
+  const api = cruel.withTimeout(fetch, {
+    ms: 5000,
+    onTimeout: () => console.log("timed out"),
+  })
+
+> fallback?
+
+  const api = cruel.fallback(fetch, {
+    fallback: cachedData,  // or () => fetchBackup()
+    onFallback: (error) => console.log("using fallback"),
+  })
+
+> combine patterns?
+
+  import { cruel } from "cruel"
+
+  // chaos + circuit breaker + retry
+  const resilientApi = cruel.retry(
+    cruel.circuitBreaker(
+      cruel(fetch, { fail: 0.1, delay: [100, 500] }),
+      { threshold: 5, timeout: 30000 }
+    ),
+    { attempts: 3, backoff: "exponential" }
+  )
 
 > presets?
 
-  cruel.enable(cruel.presets.development)  // light chaos
-  cruel.enable(cruel.presets.staging)      // medium chaos
-  cruel.enable(cruel.presets.production)   // production-like
-  cruel.enable(cruel.presets.harsh)        // harsh conditions
-  cruel.enable(cruel.presets.nightmare)    // nightmare mode
-  cruel.enable(cruel.presets.apocalypse)   // everything fails
+  cruel.enable(cruel.presets.development)
+  cruel.enable(cruel.presets.staging)
+  cruel.enable(cruel.presets.production)
+  cruel.enable(cruel.presets.harsh)
+  cruel.enable(cruel.presets.nightmare)
+  cruel.enable(cruel.presets.apocalypse)
 
 > global mode?
 
-  // enable chaos globally
   cruel.enable({ fail: 0.1, delay: [100, 500] })
-
-  // all wrapped functions affected
-  const api = cruel(fetch)
-  await api("...") // has global + local chaos
-
-  // disable when done
   cruel.disable()
+  cruel.toggle()
+  cruel.isEnabled()
 
 > scoped chaos?
 
   await cruel.scope(async () => {
-    // chaos only active in this scope
     await api("...")
   }, { fail: 0.2 })
 
 > scenarios?
 
-  // define scenario
   cruel.scenario("outage", {
     chaos: { fail: 1 },
     duration: 5000,
   })
 
-  // play it
   await cruel.play("outage")
+  cruel.stop()
 
   // built-in scenarios
   await cruel.play("networkPartition")
@@ -155,70 +285,48 @@
 
 > intercept fetch?
 
-  // patch global fetch
   cruel.patchFetch()
 
-  // add intercept rules
   cruel.intercept("api.openai.com", {
     rateLimit: { rate: 0.1, retryAfter: 60 },
     delay: [100, 500],
   })
 
-  cruel.intercept(/api\.example\.com/, {
+  cruel.intercept(/api\.anthropic\.com/, {
     fail: 0.1,
-    status: [500, 502, 503],
+    status: [529],
   })
 
-  // restore original
   cruel.unpatchFetch()
 
 > profiles?
 
-  // create profile
   cruel.profile("testing", { fail: 0.2, delay: 100 })
-
-  // use it
   cruel.useProfile("testing")
 
 > stats?
 
-  const stats = cruel.stats()
-  // {
-  //   calls: 100,
-  //   failures: 12,
-  //   timeouts: 3,
-  //   delays: 45,
-  //   corrupted: 2,
-  //   rateLimited: 5,
-  //   streamsCut: 1,
-  //   byTarget: Map { ... }
-  // }
-
+  cruel.stats()
+  // { calls, failures, timeouts, delays, ... }
   cruel.resetStats()
 
 > deterministic?
 
-  // seed for reproducible chaos
   cruel.seed(12345)
-
-  // same sequence every time
-  cruel.coin(0.5) // always same result
+  cruel.coin(0.5) // same result every time
 
 > utilities?
 
-  cruel.coin(0.5)           // random boolean
-  cruel.pick([1, 2, 3])     // random item
-  cruel.between(10, 100)    // random number
-  cruel.maybe(value, 0.5)   // value or undefined
-  await cruel.delay(500)    // sleep
+  cruel.coin(0.5)
+  cruel.pick([1, 2, 3])
+  cruel.between(10, 100)
+  cruel.maybe(value, 0.5)
+  await cruel.delay(500)
 
 > fluent api?
 
-  const api = cruel.wrap(fetch)
-    .slow(500)
-
-  // or chain methods
   cruel.wrap(fn).fail(0.1)
+  cruel.wrap(fn).slow(500)
   cruel.wrap(fn).timeout(0.05)
   cruel.wrap(fn).flaky()
   cruel.wrap(fn).nightmare()
@@ -228,7 +336,6 @@
   import { createCruel } from "cruel"
 
   const myCruel = createCruel({ delay: 100 })
-  const api = myCruel(fetch)
 
 > errors?
 
@@ -241,32 +348,11 @@
     CruelAIError,
   } from "cruel"
 
-  try {
-    await api("...")
-  } catch (e) {
-    if (e instanceof CruelRateLimitError) {
-      console.log("retry after:", e.retryAfter)
-    }
-    if (e instanceof CruelHttpError) {
-      console.log("status:", e.status)
-    }
-    if (e instanceof CruelAIError) {
-      console.log("type:", e.type)
-    }
-  }
-
 > cli?
 
-  # test endpoint with chaos
   cruel test https://api.example.com --fail 0.1 --count 20
-
-  # use preset
   cruel test https://api.example.com --preset nightmare
-
-  # run scenario
   cruel scenario outage --duration 5000
-
-  # list presets
   cruel presets
 
 > testing?
@@ -276,7 +362,7 @@
 
   beforeEach(() => {
     cruel.reset()
-    cruel.seed(12345) // deterministic
+    cruel.seed(12345)
   })
 
   test("handles failures", async () => {
@@ -284,25 +370,23 @@
     await expect(api()).rejects.toThrow()
   })
 
-  test("handles slow responses", async () => {
-    cruel.enable({ delay: 1000 })
-    const start = Date.now()
-    await api()
-    expect(Date.now() - start).toBeGreaterThan(900)
-  })
-
 > features?
 
-  ✓ wrap any async function
-  ✓ failures, timeouts, delays
+  ✓ chaos injection
   ✓ network simulation
   ✓ http status codes
-  ✓ stream corruption
-  ✓ ai sdk specific chaos
+  ✓ stream manipulation
+  ✓ ai sdk v6 integration
+  ✓ middleware support
+  ✓ circuit breaker
+  ✓ retry with backoff
+  ✓ bulkhead isolation
+  ✓ timeout wrapper
+  ✓ fallback support
   ✓ fetch interception
   ✓ presets and profiles
   ✓ scenarios
-  ✓ statistics tracking
+  ✓ statistics
   ✓ deterministic mode
   ✓ cli tool
   ✓ typescript native

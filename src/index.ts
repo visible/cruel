@@ -788,6 +788,218 @@ Object.entries(scenarios).forEach(([name, config]) => {
   cruel.scenario(name, config)
 })
 
+interface CircuitBreakerOptions {
+  threshold: number
+  timeout: number
+  onOpen?: () => void
+  onClose?: () => void
+  onHalfOpen?: () => void
+}
+
+interface CircuitBreakerState {
+  failures: number
+  state: "closed" | "open" | "half-open"
+  lastFailure: number
+}
+
+function createCircuitBreaker<T extends AnyFn>(
+  fn: T,
+  options: CircuitBreakerOptions
+): T & { getState: () => CircuitBreakerState; reset: () => void } {
+  const cbState: CircuitBreakerState = {
+    failures: 0,
+    state: "closed",
+    lastFailure: 0,
+  }
+
+  const wrapped = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+    if (cbState.state === "open") {
+      if (Date.now() - cbState.lastFailure > options.timeout) {
+        cbState.state = "half-open"
+        options.onHalfOpen?.()
+      } else {
+        throw new CruelError("circuit breaker is open", "CRUEL_CIRCUIT_OPEN")
+      }
+    }
+
+    try {
+      const result = await fn(...args)
+      if (cbState.state === "half-open") {
+        cbState.state = "closed"
+        cbState.failures = 0
+        options.onClose?.()
+      }
+      return result as ReturnType<T>
+    } catch (e) {
+      cbState.failures++
+      cbState.lastFailure = Date.now()
+      if (cbState.failures >= options.threshold) {
+        cbState.state = "open"
+        options.onOpen?.()
+      }
+      throw e
+    }
+  }
+
+  const result = wrapped as T & { getState: () => CircuitBreakerState; reset: () => void }
+  result.getState = () => ({ ...cbState })
+  result.reset = () => {
+    cbState.failures = 0
+    cbState.state = "closed"
+    cbState.lastFailure = 0
+  }
+
+  return result
+}
+
+interface RetryOptions {
+  attempts: number
+  delay?: number | [number, number]
+  backoff?: "fixed" | "linear" | "exponential"
+  maxDelay?: number
+  onRetry?: (attempt: number, error: Error) => void
+  retryIf?: (error: Error) => boolean
+}
+
+function withRetry<T extends AnyFn>(fn: T, options: RetryOptions): T {
+  const wrapped = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+    let lastError: Error | undefined
+    for (let attempt = 1; attempt <= options.attempts; attempt++) {
+      try {
+        return (await fn(...args)) as ReturnType<T>
+      } catch (e) {
+        lastError = e as Error
+        if (options.retryIf && !options.retryIf(lastError)) {
+          throw lastError
+        }
+        if (attempt < options.attempts) {
+          options.onRetry?.(attempt, lastError)
+          let delay = getDelay(options.delay ?? 1000)
+          if (options.backoff === "linear") {
+            delay = delay * attempt
+          } else if (options.backoff === "exponential") {
+            delay = delay * Math.pow(2, attempt - 1)
+          }
+          if (options.maxDelay) {
+            delay = Math.min(delay, options.maxDelay)
+          }
+          await sleep(delay)
+        }
+      }
+    }
+    throw lastError
+  }
+  return wrapped as T
+}
+
+interface BulkheadOptions {
+  maxConcurrent: number
+  maxQueue?: number
+  onReject?: () => void
+}
+
+function createBulkhead<T extends AnyFn>(fn: T, options: BulkheadOptions): T {
+  let running = 0
+  const queue: Array<{
+    args: Parameters<T>
+    resolve: (value: ReturnType<T>) => void
+    reject: (error: Error) => void
+  }> = []
+
+  const processQueue = async () => {
+    if (running >= options.maxConcurrent || queue.length === 0) return
+    const item = queue.shift()
+    if (!item) return
+    running++
+    try {
+      const result = await fn(...item.args)
+      item.resolve(result as ReturnType<T>)
+    } catch (e) {
+      item.reject(e as Error)
+    } finally {
+      running--
+      processQueue()
+    }
+  }
+
+  const wrapped = (...args: Parameters<T>): Promise<ReturnType<T>> => {
+    return new Promise((resolve, reject) => {
+      if (running < options.maxConcurrent) {
+        running++
+        ;(fn(...args) as Promise<ReturnType<T>>)
+          .then((result: ReturnType<T>) => {
+            resolve(result)
+            running--
+            processQueue()
+          })
+          .catch((e: Error) => {
+            reject(e)
+            running--
+            processQueue()
+          })
+      } else if (!options.maxQueue || queue.length < options.maxQueue) {
+        queue.push({ args, resolve, reject })
+      } else {
+        options.onReject?.()
+        reject(new CruelError("bulkhead queue full", "CRUEL_BULKHEAD_FULL"))
+      }
+    })
+  }
+
+  return wrapped as T
+}
+
+interface TimeoutOptions {
+  ms: number
+  onTimeout?: () => void
+}
+
+function withTimeout<T extends AnyFn>(fn: T, options: TimeoutOptions): T {
+  const wrapped = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+    return Promise.race([
+      fn(...args) as Promise<ReturnType<T>>,
+      new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          options.onTimeout?.()
+          reject(new CruelTimeoutError())
+        }, options.ms)
+      }),
+    ])
+  }
+  return wrapped as T
+}
+
+interface FallbackOptions<T> {
+  fallback: T | (() => T) | (() => Promise<T>)
+  onFallback?: (error: Error) => void
+}
+
+function withFallback<T extends AnyFn>(
+  fn: T,
+  options: FallbackOptions<ReturnType<T>>
+): T {
+  const wrapped = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+    try {
+      return (await fn(...args)) as ReturnType<T>
+    } catch (e) {
+      options.onFallback?.(e as Error)
+      const fb = options.fallback
+      if (typeof fb === "function") {
+        return (fb as () => ReturnType<T>)()
+      }
+      return fb
+    }
+  }
+  return wrapped as T
+}
+
+cruel.circuitBreaker = createCircuitBreaker
+cruel.retry = withRetry
+cruel.bulkhead = createBulkhead
+cruel.timeout = <T extends AnyFn>(fn: T, rate = 0.1): T => cruel(fn, { timeout: rate })
+cruel.withTimeout = withTimeout
+cruel.fallback = withFallback
+
 function createCruel(defaults: ChaosOptions = {}) {
   const instance = <T extends AnyFn>(fn: T, opts: ChaosOptions = {}): T =>
     cruel(fn, merge(defaults, opts))
@@ -812,6 +1024,11 @@ function createCruel(defaults: ChaosOptions = {}) {
 export {
   cruel,
   createCruel,
+  createCircuitBreaker,
+  withRetry,
+  createBulkhead,
+  withTimeout,
+  withFallback,
   CruelError,
   CruelTimeoutError,
   CruelNetworkError,
@@ -827,4 +1044,31 @@ export {
   type ScenarioConfig,
   type Stats,
   type CruelConfig,
+  type CircuitBreakerOptions,
+  type RetryOptions,
+  type BulkheadOptions,
+  type TimeoutOptions,
+  type FallbackOptions,
 }
+
+export {
+  aisdk,
+  createChaosMiddleware,
+  wrapProvider,
+  wrapModel,
+  wrapTool,
+  wrapTools,
+  AISDKError,
+  RateLimitError,
+  OverloadedError,
+  ContextLengthError,
+  ContentFilterError,
+  ModelUnavailableError,
+  InvalidApiKeyError,
+  QuotaExceededError,
+  StreamCutError,
+  ToolExecutionError,
+  type AISDKChaosOptions,
+  type MiddlewareOptions,
+  type ProviderOptions,
+} from "./aisdk.js"

@@ -15,6 +15,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./aisdk": {
+      "types": "./dist/aisdk.d.ts",
+      "import": "./dist/aisdk.js",
+      "require": "./dist/aisdk.cjs"
     }
   },
   "files": [
