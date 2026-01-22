@@ -1,0 +1,56 @@
+{
+  "name": "cruel",
+  "version": "1.0.0",
+  "description": "chaos testing with zero mercy",
+  "type": "module",
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "cruel": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "bun test",
+    "prepublishOnly": "bun run build"
+  },
+  "keywords": [
+    "chaos",
+    "testing",
+    "fault-injection",
+    "resilience",
+    "reliability",
+    "chaos-engineering",
+    "failure",
+    "retry",
+    "timeout",
+    "latency"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "Visible",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/visible/cruel"
+  },
+  "homepage": "https://github.com/visible/cruel",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}

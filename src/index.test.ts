@@ -1,0 +1,494 @@
+import { describe, test, expect, beforeEach } from "bun:test"
+import {
+  cruel,
+  createCruel,
+  CruelError,
+  CruelTimeoutError,
+  CruelNetworkError,
+  CruelHttpError,
+  CruelRateLimitError,
+  CruelAIError,
+} from "./index"
+
+beforeEach(() => {
+  cruel.reset()
+})
+
+describe("cruel", () => {
+  test("wraps function without chaos when disabled", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel(fn, { fail: 0, timeout: 0 })
+    expect(await wrapped()).toBe(42)
+  })
+
+  test("fail throws CruelError", async () => {
+    cruel.seed(12345)
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel(fn, { fail: 1 })
+    await expect(wrapped()).rejects.toThrow(CruelError)
+  })
+
+  test("timeout never resolves", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel(fn, { timeout: 1 })
+    let resolved = false
+    wrapped().then(() => { resolved = true })
+    await new Promise(r => setTimeout(r, 100))
+    expect(resolved).toBe(false)
+  })
+
+  test("delay adds latency", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel(fn, { delay: 50 })
+    const start = Date.now()
+    await wrapped()
+    expect(Date.now() - start).toBeGreaterThanOrEqual(45)
+  })
+
+  test("delay with range", async () => {
+    cruel.seed(99999)
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel(fn, { delay: [50, 100] })
+    const start = Date.now()
+    await wrapped()
+    const elapsed = Date.now() - start
+    expect(elapsed).toBeGreaterThanOrEqual(45)
+    expect(elapsed).toBeLessThanOrEqual(150)
+  })
+})
+
+describe("cruel.fail", () => {
+  test("wraps function with failure rate", async () => {
+    cruel.seed(12345)
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.fail(fn, 1)
+    await expect(wrapped()).rejects.toThrow(CruelError)
+  })
+})
+
+describe("cruel.slow", () => {
+  test("adds delay", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.slow(fn, 50)
+    const start = Date.now()
+    await wrapped()
+    expect(Date.now() - start).toBeGreaterThanOrEqual(45)
+  })
+})
+
+describe("cruel.timeout", () => {
+  test("creates timeout wrapper", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.timeout(fn, 1)
+    let resolved = false
+    wrapped().then(() => { resolved = true })
+    await new Promise(r => setTimeout(r, 100))
+    expect(resolved).toBe(false)
+  })
+})
+
+describe("cruel.flaky", () => {
+  test("creates flaky wrapper", async () => {
+    cruel.seed(11111)
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.flaky(fn, 0)
+    expect(await wrapped()).toBe(42)
+  })
+})
+
+describe("cruel.unreliable", () => {
+  test("creates unreliable wrapper", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel(fn, { delay: 50 })
+    const result = await wrapped()
+    expect(result).toBe(42)
+  })
+})
+
+describe("cruel.nightmare", () => {
+  test("creates nightmare wrapper with high fail rate", () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.nightmare(fn)
+    expect(wrapped).toBeInstanceOf(Function)
+  })
+})
+
+describe("cruel.network", () => {
+  test("latency adds delay", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.network.latency(fn, 50)
+    const start = Date.now()
+    await wrapped()
+    expect(Date.now() - start).toBeGreaterThanOrEqual(45)
+  })
+
+  test("packetLoss throws", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.network.packetLoss(fn, 1)
+    await expect(wrapped()).rejects.toThrow(CruelNetworkError)
+  })
+
+  test("disconnect throws", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.network.disconnect(fn, 1)
+    await expect(wrapped()).rejects.toThrow(CruelNetworkError)
+  })
+
+  test("dns throws", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.network.dns(fn, 1)
+    await expect(wrapped()).rejects.toThrow(CruelNetworkError)
+  })
+
+  test("offline always throws", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.network.offline(fn)
+    await expect(wrapped()).rejects.toThrow(CruelNetworkError)
+  })
+})
+
+describe("cruel.http", () => {
+  test("status throws with code", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.http.status(fn, 500, 1)
+    await expect(wrapped()).rejects.toThrow(CruelHttpError)
+  })
+
+  test("rateLimit throws 429", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.http.rateLimit(fn, 1)
+    await expect(wrapped()).rejects.toThrow(CruelRateLimitError)
+  })
+
+  test("serverError throws 5xx", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.http.serverError(fn, 1)
+    await expect(wrapped()).rejects.toThrow(CruelHttpError)
+  })
+
+  test("clientError throws 4xx", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.http.clientError(fn, 1)
+    await expect(wrapped()).rejects.toThrow(CruelHttpError)
+  })
+})
+
+describe("cruel.stream", () => {
+  test("cut throws mid-transfer", async () => {
+    const fn = () => Promise.resolve("data")
+    const wrapped = cruel.stream.cut(fn, 1)
+    await expect(wrapped()).rejects.toThrow(CruelError)
+  })
+
+  test("pause adds delay after result", async () => {
+    const fn = () => Promise.resolve("data")
+    const wrapped = cruel.stream.pause(fn, 50)
+    const start = Date.now()
+    await wrapped()
+    expect(Date.now() - start).toBeGreaterThanOrEqual(45)
+  })
+
+  test("corrupt modifies string", async () => {
+    cruel.seed(44444)
+    const fn = () => Promise.resolve("hello world")
+    const wrapped = cruel.stream.corrupt(fn, 1)
+    const result = await wrapped()
+    expect(result).toContain("�")
+  })
+
+  test("truncate shortens string", async () => {
+    cruel.seed(55555)
+    const fn = () => Promise.resolve("hello world this is a long string")
+    const wrapped = cruel.stream.truncate(fn, 1)
+    const result = await wrapped()
+    expect(result.length).toBeLessThan(33)
+  })
+})
+
+describe("cruel.ai", () => {
+  test("rateLimit throws", async () => {
+    const fn = () => Promise.resolve("response")
+    const wrapped = cruel.ai.rateLimit(fn, 1)
+    await expect(wrapped()).rejects.toThrow(CruelAIError)
+  })
+
+  test("overloaded throws", async () => {
+    const fn = () => Promise.resolve("response")
+    const wrapped = cruel.ai.overloaded(fn, 1)
+    await expect(wrapped()).rejects.toThrow(CruelAIError)
+  })
+
+  test("contextLength throws", async () => {
+    const fn = () => Promise.resolve("response")
+    const wrapped = cruel.ai.contextLength(fn, 1)
+    await expect(wrapped()).rejects.toThrow(CruelAIError)
+  })
+
+  test("contentFilter throws", async () => {
+    const fn = () => Promise.resolve("response")
+    const wrapped = cruel.ai.contentFilter(fn, 1)
+    await expect(wrapped()).rejects.toThrow(CruelAIError)
+  })
+
+  test("modelUnavailable throws", async () => {
+    const fn = () => Promise.resolve("response")
+    const wrapped = cruel.ai.modelUnavailable(fn, 1)
+    await expect(wrapped()).rejects.toThrow(CruelAIError)
+  })
+
+  test("streamCut throws", async () => {
+    const fn = () => Promise.resolve("response")
+    const wrapped = cruel.ai.streamCut(fn, 1)
+    await expect(wrapped()).rejects.toThrow(CruelAIError)
+  })
+
+  test("partialResponse truncates", async () => {
+    cruel.seed(66666)
+    const fn = () => Promise.resolve("this is a complete response")
+    const wrapped = cruel.ai.partialResponse(fn, 1)
+    const result = await wrapped()
+    expect(result.length).toBeLessThan(27)
+  })
+
+  test("invalidJson appends garbage", async () => {
+    cruel.seed(77777)
+    const fn = () => Promise.resolve('{"valid": true}')
+    const wrapped = cruel.ai.invalidJson(fn, 1)
+    const result = await wrapped()
+    expect(result).toContain("{invalid")
+  })
+})
+
+describe("cruel.enable/disable", () => {
+  test("enable activates global chaos", async () => {
+    cruel.enable({ fail: 1 })
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel(fn)
+    await expect(wrapped()).rejects.toThrow()
+    cruel.disable()
+  })
+
+  test("disable deactivates chaos", async () => {
+    cruel.enable({ fail: 1 })
+    cruel.disable()
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel(fn)
+    expect(await wrapped()).toBe(42)
+  })
+
+  test("toggle switches state", () => {
+    expect(cruel.isEnabled()).toBe(false)
+    cruel.toggle()
+    expect(cruel.isEnabled()).toBe(true)
+    cruel.toggle()
+    expect(cruel.isEnabled()).toBe(false)
+  })
+})
+
+describe("cruel.scope", () => {
+  test("enables chaos within scope", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel(fn)
+
+    await cruel.scope(async () => {
+      expect(cruel.isEnabled()).toBe(true)
+    }, { fail: 0 })
+
+    expect(cruel.isEnabled()).toBe(false)
+  })
+
+  test("restores previous state after scope", async () => {
+    cruel.enable({ delay: 100 })
+
+    await cruel.scope(async () => {
+      expect(cruel.isEnabled()).toBe(true)
+    }, { fail: 0 })
+
+    expect(cruel.isEnabled()).toBe(true)
+    cruel.disable()
+  })
+})
+
+describe("cruel.profile", () => {
+  test("creates and uses profile", () => {
+    cruel.profile("test", { fail: 0.5, delay: 100 })
+    cruel.useProfile("test")
+    expect(cruel.isEnabled()).toBe(true)
+  })
+
+  test("throws on unknown profile", () => {
+    expect(() => cruel.useProfile("unknown")).toThrow()
+  })
+})
+
+describe("cruel.scenario", () => {
+  test("creates scenario", () => {
+    cruel.scenario("test", { chaos: { fail: 0.5 } })
+    expect(cruel.activeScenario()).toBe(null)
+  })
+
+  test("play activates scenario", async () => {
+    cruel.scenario("quick", { chaos: { fail: 0 }, duration: 50 })
+    await cruel.play("quick")
+    expect(cruel.activeScenario()).toBe(null)
+  })
+
+  test("stop deactivates scenario", async () => {
+    cruel.scenario("long", { chaos: { fail: 0 } })
+    cruel.play("long")
+    await new Promise(r => setTimeout(r, 10))
+    cruel.stop()
+    expect(cruel.activeScenario()).toBe(null)
+  })
+})
+
+describe("cruel.stats", () => {
+  test("tracks calls", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel(fn)
+    await wrapped()
+    await wrapped()
+    expect(cruel.stats().calls).toBe(2)
+  })
+
+  test("tracks failures", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel(fn, { fail: 1 })
+    try { await wrapped() } catch {}
+    expect(cruel.stats().failures).toBe(1)
+  })
+
+  test("resetStats clears counters", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel(fn)
+    await wrapped()
+    cruel.resetStats()
+    expect(cruel.stats().calls).toBe(0)
+  })
+})
+
+describe("cruel.seed", () => {
+  test("makes randomness deterministic", async () => {
+    cruel.seed(12345)
+    const results1: boolean[] = []
+    for (let i = 0; i < 10; i++) {
+      results1.push(cruel.coin(0.5))
+    }
+
+    cruel.seed(12345)
+    const results2: boolean[] = []
+    for (let i = 0; i < 10; i++) {
+      results2.push(cruel.coin(0.5))
+    }
+
+    expect(results1).toEqual(results2)
+  })
+})
+
+describe("cruel.wrap", () => {
+  test("provides fluent API", async () => {
+    const fn = () => Promise.resolve(42)
+    const wrapped = cruel.wrap(fn).slow(50)
+    const start = Date.now()
+    await wrapped()
+    expect(Date.now() - start).toBeGreaterThanOrEqual(45)
+  })
+})
+
+describe("cruel.maybe", () => {
+  test("returns value or undefined", () => {
+    cruel.seed(88888)
+    const results = Array.from({ length: 100 }, () => cruel.maybe(42, 0.5))
+    expect(results.some(r => r === 42)).toBe(true)
+    expect(results.some(r => r === undefined)).toBe(true)
+  })
+})
+
+describe("cruel.coin", () => {
+  test("returns boolean based on rate", () => {
+    cruel.seed(99999)
+    const results = Array.from({ length: 100 }, () => cruel.coin(0.5))
+    expect(results.filter(Boolean).length).toBeGreaterThan(20)
+    expect(results.filter(Boolean).length).toBeLessThan(80)
+  })
+})
+
+describe("cruel.pick", () => {
+  test("picks random item from array", () => {
+    cruel.seed(11111)
+    const items = [1, 2, 3, 4, 5]
+    const picked = cruel.pick(items)
+    expect(items).toContain(picked)
+  })
+})
+
+describe("cruel.between", () => {
+  test("returns number in range", () => {
+    cruel.seed(22222)
+    const results = Array.from({ length: 100 }, () => cruel.between(10, 20))
+    expect(results.every(r => r >= 10 && r <= 20)).toBe(true)
+  })
+})
+
+describe("cruel.delay", () => {
+  test("delays execution", async () => {
+    const start = Date.now()
+    await cruel.delay(50)
+    expect(Date.now() - start).toBeGreaterThanOrEqual(45)
+  })
+})
+
+describe("cruel.presets", () => {
+  test("has predefined presets", () => {
+    expect(cruel.presets.development).toBeDefined()
+    expect(cruel.presets.staging).toBeDefined()
+    expect(cruel.presets.production).toBeDefined()
+    expect(cruel.presets.harsh).toBeDefined()
+    expect(cruel.presets.nightmare).toBeDefined()
+    expect(cruel.presets.apocalypse).toBeDefined()
+  })
+})
+
+describe("createCruel", () => {
+  test("creates instance with defaults", async () => {
+    const myCruel = createCruel({ delay: 50 })
+    const fn = () => Promise.resolve(42)
+    const wrapped = myCruel(fn)
+    const start = Date.now()
+    await wrapped()
+    expect(Date.now() - start).toBeGreaterThanOrEqual(45)
+  })
+})
+
+describe("errors", () => {
+  test("CruelError has code", () => {
+    const err = new CruelError("test", "TEST_CODE")
+    expect(err.code).toBe("TEST_CODE")
+  })
+
+  test("CruelTimeoutError", () => {
+    const err = new CruelTimeoutError()
+    expect(err.code).toBe("CRUEL_TIMEOUT")
+  })
+
+  test("CruelNetworkError has type in code", () => {
+    const err = new CruelNetworkError("disconnect")
+    expect(err.code).toBe("CRUEL_NETWORK_DISCONNECT")
+  })
+
+  test("CruelHttpError has status", () => {
+    const err = new CruelHttpError(500)
+    expect(err.status).toBe(500)
+  })
+
+  test("CruelRateLimitError has retryAfter", () => {
+    const err = new CruelRateLimitError(60)
+    expect(err.retryAfter).toBe(60)
+    expect(err.status).toBe(429)
+  })
+
+  test("CruelAIError has type", () => {
+    const err = new CruelAIError("rate_limit")
+    expect(err.type).toBe("rate_limit")
+  })
+})
