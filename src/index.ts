@@ -78,7 +78,8 @@ interface Stats {
   corrupted: number
   rateLimited: number
   streamsCut: number
-  byTarget: Map<string, { calls: number; failures: number }>
+  latencies: number[]
+  byTarget: Map<string, { calls: number; failures: number; latencies: number[] }>
 }
 
 interface InterceptRule {
@@ -109,7 +110,8 @@ const state = {
     corrupted: 0,
     rateLimited: 0,
     streamsCut: 0,
-    byTarget: new Map<string, { calls: number; failures: number }>(),
+    latencies: [],
+    byTarget: new Map<string, { calls: number; failures: number; latencies: number[] }>(),
   } as Stats,
   originalFetch: globalThis.fetch,
   fetchPatched: false,
@@ -215,13 +217,37 @@ function merge<T extends object>(...objs: (T | undefined)[]): T {
   return Object.assign({}, ...objs.filter(Boolean)) as T
 }
 
-function trackStats(target: string, failed: boolean): void {
+function trackStats(target: string, failed: boolean, latency?: number): void {
   state.stats.calls++
   if (failed) state.stats.failures++
-  const t = state.stats.byTarget.get(target) ?? { calls: 0, failures: 0 }
+  if (latency !== undefined) state.stats.latencies.push(latency)
+  const t = state.stats.byTarget.get(target) ?? { calls: 0, failures: 0, latencies: [] }
   t.calls++
   if (failed) t.failures++
+  if (latency !== undefined) t.latencies.push(latency)
   state.stats.byTarget.set(target, t)
+}
+
+function percentile(arr: number[], p: number): number {
+  if (arr.length === 0) return 0
+  const sorted = [...arr].sort((a, b) => a - b)
+  const idx = Math.ceil((p / 100) * sorted.length) - 1
+  return sorted[Math.max(0, idx)]
+}
+
+function getStatsWithPercentiles(stats: Stats) {
+  return {
+    ...stats,
+    p50: percentile(stats.latencies, 50),
+    p95: percentile(stats.latencies, 95),
+    p99: percentile(stats.latencies, 99),
+    avg: stats.latencies.length > 0
+      ? Math.round(stats.latencies.reduce((a, b) => a + b, 0) / stats.latencies.length)
+      : 0,
+    min: stats.latencies.length > 0 ? Math.min(...stats.latencies) : 0,
+    max: stats.latencies.length > 0 ? Math.max(...stats.latencies) : 0,
+    byTarget: new Map(stats.byTarget),
+  }
 }
 
 async function applyChaos<T>(
@@ -229,6 +255,7 @@ async function applyChaos<T>(
   opts: ChaosOptions,
   target = "unknown"
 ): Promise<T> {
+  const start = Date.now()
   const o = state.enabled ? merge(state.globalChaos, opts) : opts
   if (o.enabled === false) return fn()
 
@@ -239,7 +266,7 @@ async function applyChaos<T>(
   }
 
   if (chance(o.fail)) {
-    trackStats(target, true)
+    trackStats(target, true, Date.now() - start)
     throw new CruelError()
   }
 
@@ -252,8 +279,9 @@ async function applyChaos<T>(
     await sleep(delay + jitter + spike)
   }
 
-  trackStats(target, false)
-  return fn()
+  const result = await fn()
+  trackStats(target, false, Date.now() - start)
+  return result
 }
 
 function cruel<T extends AnyFn>(fn: T, options: ChaosOptions = {}): T {
@@ -580,6 +608,7 @@ cruel.reset = (): void => {
     corrupted: 0,
     rateLimited: 0,
     streamsCut: 0,
+    latencies: [],
     byTarget: new Map(),
   }
   state.timers.forEach(clearTimeout)
@@ -591,10 +620,7 @@ cruel.reset = (): void => {
   }
 }
 
-cruel.stats = (): Stats => ({
-  ...state.stats,
-  byTarget: new Map(state.stats.byTarget),
-})
+cruel.stats = () => getStatsWithPercentiles(state.stats)
 
 cruel.resetStats = (): void => {
   state.stats = {
@@ -605,6 +631,7 @@ cruel.resetStats = (): void => {
     corrupted: 0,
     rateLimited: 0,
     streamsCut: 0,
+    latencies: [],
     byTarget: new Map(),
   }
 }
@@ -782,11 +809,92 @@ const scenarios: Record<string, Omit<ScenarioConfig, "name">> = {
   degraded: { chaos: { fail: 0.1, delay: [500, 1500] as [number, number] }, duration: 30000 },
   outage: { chaos: { fail: 1, timeout: 0.5 }, duration: 60000 },
   recovery: { chaos: { fail: 0.3, delay: [100, 500] as [number, number] }, duration: 15000 },
+  blackFriday: { chaos: { delay: [1000, 3000] as [number, number], fail: 0.15, jitter: 1000 }, duration: 60000 },
+  mobileNetwork: { chaos: { delay: [500, 2000] as [number, number], fail: 0.2, timeout: 0.1 }, duration: 30000 },
+  datacenterFailover: { chaos: { fail: 0.5, delay: [200, 800] as [number, number] }, duration: 20000 },
+  ddosAttack: { chaos: { timeout: 0.4, delay: [2000, 10000] as [number, number] }, duration: 30000 },
+  coldStart: { chaos: { delay: [3000, 8000] as [number, number] }, duration: 10000 },
+  gcPause: { chaos: { delay: [100, 500] as [number, number], spike: [500, 2000] as [number, number] }, duration: 15000 },
+  connectionPool: { chaos: { fail: 0.3, timeout: 0.2 }, duration: 20000 },
 }
 
 Object.entries(scenarios).forEach(([name, config]) => {
   cruel.scenario(name, config)
 })
+
+interface MemoryPressureOptions {
+  size?: number
+  duration?: number
+  onStart?: () => void
+  onEnd?: () => void
+}
+
+function simulateMemoryPressure(options: MemoryPressureOptions = {}): () => void {
+  const size = options.size ?? 50 * 1024 * 1024
+  const arrays: Uint8Array[] = []
+  const chunkSize = 1024 * 1024
+
+  options.onStart?.()
+
+  let allocated = 0
+  while (allocated < size) {
+    const chunk = new Uint8Array(chunkSize)
+    chunk.fill(Math.floor(Math.random() * 256))
+    arrays.push(chunk)
+    allocated += chunkSize
+  }
+
+  const cleanup = () => {
+    arrays.length = 0
+    options.onEnd?.()
+  }
+
+  if (options.duration) {
+    setTimeout(cleanup, options.duration)
+  }
+
+  return cleanup
+}
+
+interface CpuPressureOptions {
+  duration?: number
+  intensity?: number
+  onStart?: () => void
+  onEnd?: () => void
+}
+
+function simulateCpuPressure(options: CpuPressureOptions = {}): () => void {
+  const duration = options.duration ?? 1000
+  const intensity = options.intensity ?? 0.8
+  let running = true
+
+  options.onStart?.()
+
+  const busyWork = () => {
+    if (!running) return
+    const start = Date.now()
+    while (Date.now() - start < intensity * 10) {
+      Math.random() * Math.random()
+    }
+    setTimeout(busyWork, (1 - intensity) * 10)
+  }
+
+  busyWork()
+
+  const timeoutId = setTimeout(() => {
+    running = false
+    options.onEnd?.()
+  }, duration)
+
+  return () => {
+    running = false
+    clearTimeout(timeoutId)
+    options.onEnd?.()
+  }
+}
+
+cruel.memory = simulateMemoryPressure
+cruel.cpu = simulateCpuPressure
 
 interface CircuitBreakerOptions {
   threshold: number
@@ -993,9 +1101,220 @@ function withFallback<T extends AnyFn>(
   return wrapped as T
 }
 
+interface HedgeOptions {
+  count: number
+  delay: number
+}
+
+function withHedge<T extends AnyFn>(fn: T, options: HedgeOptions): T {
+  const wrapped = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+    const promises: Promise<ReturnType<T>>[] = []
+    const errors: Error[] = []
+
+    for (let i = 0; i < options.count; i++) {
+      if (i > 0) {
+        await sleep(options.delay)
+      }
+      promises.push(
+        (fn(...args) as Promise<ReturnType<T>>).catch((e) => {
+          errors.push(e)
+          throw e
+        })
+      )
+    }
+
+    try {
+      return await Promise.any(promises)
+    } catch {
+      throw errors[0] || new CruelError("all hedged requests failed", "CRUEL_HEDGE_FAILED")
+    }
+  }
+  return wrapped as T
+}
+
+interface RateLimiterOptions {
+  requests: number
+  interval: number
+  onLimit?: () => void
+}
+
+interface RateLimiterState {
+  tokens: number
+  lastRefill: number
+}
+
+function createRateLimiter<T extends AnyFn>(fn: T, options: RateLimiterOptions): T {
+  const rlState: RateLimiterState = {
+    tokens: options.requests,
+    lastRefill: Date.now(),
+  }
+
+  const refill = () => {
+    const now = Date.now()
+    const elapsed = now - rlState.lastRefill
+    const tokensToAdd = Math.floor(elapsed / options.interval) * options.requests
+    if (tokensToAdd > 0) {
+      rlState.tokens = Math.min(options.requests, rlState.tokens + tokensToAdd)
+      rlState.lastRefill = now
+    }
+  }
+
+  const wrapped = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+    refill()
+    if (rlState.tokens <= 0) {
+      options.onLimit?.()
+      throw new CruelRateLimitError(Math.ceil(options.interval / 1000))
+    }
+    rlState.tokens--
+    return fn(...args) as ReturnType<T>
+  }
+  return wrapped as T
+}
+
+interface CacheOptions<T> {
+  ttl: number
+  key?: (...args: unknown[]) => string
+  onHit?: (key: string) => void
+  onMiss?: (key: string) => void
+}
+
+function withCache<T extends AnyFn>(fn: T, options: CacheOptions<ReturnType<T>>): T {
+  const cache = new Map<string, { value: ReturnType<T>; expires: number }>()
+
+  const wrapped = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+    const key = options.key ? options.key(...args) : JSON.stringify(args)
+    const cached = cache.get(key)
+
+    if (cached && cached.expires > Date.now()) {
+      options.onHit?.(key)
+      return cached.value
+    }
+
+    options.onMiss?.(key)
+    const result = (await fn(...args)) as ReturnType<T>
+    cache.set(key, { value: result, expires: Date.now() + options.ttl })
+    return result
+  }
+  return wrapped as T
+}
+
+type CruelEventType = "call" | "success" | "failure" | "timeout" | "retry" | "circuitOpen" | "circuitClose"
+type CruelEventHandler = (event: { type: CruelEventType; target?: string; error?: Error; duration?: number }) => void
+
+const eventHandlers: CruelEventHandler[] = []
+
+function emitEvent(type: CruelEventType, data: { target?: string; error?: Error; duration?: number } = {}) {
+  eventHandlers.forEach((handler) => handler({ type, ...data }))
+}
+
+cruel.on = (handler: CruelEventHandler): (() => void) => {
+  eventHandlers.push(handler)
+  return () => {
+    const index = eventHandlers.indexOf(handler)
+    if (index > -1) eventHandlers.splice(index, 1)
+  }
+}
+
+cruel.removeAllListeners = () => {
+  eventHandlers.length = 0
+}
+
+interface AbortableOptions {
+  signal?: AbortSignal
+}
+
+function withAbort<T extends AnyFn>(fn: T, options: AbortableOptions): T {
+  const wrapped = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+    if (options.signal?.aborted) {
+      throw new CruelError("operation aborted", "CRUEL_ABORTED")
+    }
+
+    return new Promise((resolve, reject) => {
+      const abortHandler = () => {
+        reject(new CruelError("operation aborted", "CRUEL_ABORTED"))
+      }
+
+      options.signal?.addEventListener("abort", abortHandler, { once: true })
+
+      ;(fn(...args) as Promise<ReturnType<T>>)
+        .then(resolve)
+        .catch(reject)
+        .finally(() => {
+          options.signal?.removeEventListener("abort", abortHandler)
+        })
+    })
+  }
+  return wrapped as T
+}
+
+interface WrapOptions extends ChaosOptions {
+  retry?: RetryOptions
+  circuitBreaker?: CircuitBreakerOptions
+  bulkhead?: BulkheadOptions
+  timeout?: number
+  fallback?: unknown
+  cache?: CacheOptions<unknown>
+  rateLimiter?: RateLimiterOptions
+  hedge?: HedgeOptions
+}
+
+function wrap<T extends AnyFn>(fn: T, options: WrapOptions): T {
+  let wrapped = fn
+
+  if (options.cache) {
+    wrapped = withCache(wrapped, options.cache as CacheOptions<ReturnType<T>>)
+  }
+
+  if (options.rateLimiter) {
+    wrapped = createRateLimiter(wrapped, options.rateLimiter)
+  }
+
+  if (options.bulkhead) {
+    wrapped = createBulkhead(wrapped, options.bulkhead)
+  }
+
+  if (options.circuitBreaker) {
+    wrapped = createCircuitBreaker(wrapped, options.circuitBreaker)
+  }
+
+  if (options.retry) {
+    wrapped = withRetry(wrapped, options.retry)
+  }
+
+  if (options.timeout && typeof options.timeout === "number" && options.timeout > 0) {
+    wrapped = withTimeout(wrapped, { ms: options.timeout })
+  }
+
+  if (options.fallback !== undefined) {
+    wrapped = withFallback(wrapped, { fallback: options.fallback as ReturnType<T> })
+  }
+
+  if (options.hedge) {
+    wrapped = withHedge(wrapped, options.hedge)
+  }
+
+  const chaosOpts: ChaosOptions = {
+    fail: options.fail,
+    delay: options.delay,
+    jitter: options.jitter,
+    enabled: options.enabled,
+  }
+
+  if (Object.values(chaosOpts).some((v) => v !== undefined)) {
+    wrapped = cruel(wrapped, chaosOpts)
+  }
+
+  return wrapped
+}
+
 cruel.circuitBreaker = createCircuitBreaker
 cruel.retry = withRetry
 cruel.bulkhead = createBulkhead
+cruel.hedge = withHedge
+cruel.rateLimiter = createRateLimiter
+cruel.cache = withCache
+cruel.abort = withAbort
+cruel.compose = wrap
 cruel.timeout = <T extends AnyFn>(fn: T, rate = 0.1): T => cruel(fn, { timeout: rate })
 cruel.withTimeout = withTimeout
 cruel.fallback = withFallback
@@ -1029,6 +1348,12 @@ export {
   createBulkhead,
   withTimeout,
   withFallback,
+  withHedge,
+  createRateLimiter,
+  withCache,
+  withAbort,
+  wrap,
+  emitEvent,
   CruelError,
   CruelTimeoutError,
   CruelNetworkError,
@@ -1049,6 +1374,13 @@ export {
   type BulkheadOptions,
   type TimeoutOptions,
   type FallbackOptions,
+  type HedgeOptions,
+  type RateLimiterOptions,
+  type CacheOptions,
+  type WrapOptions,
+  type CruelEventType,
+  type CruelEventHandler,
+  type AbortableOptions,
 }
 
 export {
@@ -1068,7 +1400,12 @@ export {
   QuotaExceededError,
   StreamCutError,
   ToolExecutionError,
+  NoSuchToolError,
+  InvalidToolArgumentsError,
+  EmptyResponseError,
   type AISDKChaosOptions,
   type MiddlewareOptions,
   type ProviderOptions,
 } from "./aisdk.js"
+
+export { matchers, setupMatchers } from "./matchers.js"

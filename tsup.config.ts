@@ -2,7 +2,7 @@ import { defineConfig } from "tsup"
 
 export default defineConfig([
   {
-    entry: ["src/index.ts", "src/aisdk.ts"],
+    entry: ["src/index.ts", "src/aisdk.ts", "src/matchers.ts"],
     format: ["esm", "cjs"],
     dts: true,
     clean: true,

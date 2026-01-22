@@ -392,8 +392,8 @@
   ✓ typescript native
   ✓ zero dependencies
   ✓ works everywhere
-```
 
-```
-made with x_x
+> license?
+
+  mit
 ```

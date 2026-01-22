@@ -1,6 +1,6 @@
 {
   "name": "cruel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "chaos testing with zero mercy",
   "type": "module",
   "sideEffects": false,
@@ -20,6 +20,11 @@
       "types": "./dist/aisdk.d.ts",
       "import": "./dist/aisdk.js",
       "require": "./dist/aisdk.cjs"
+    },
+    "./matchers": {
+      "types": "./dist/matchers.d.ts",
+      "import": "./dist/matchers.js",
+      "require": "./dist/matchers.cjs"
     }
   },
   "files": [
@@ -41,7 +46,19 @@
     "failure",
     "retry",
     "timeout",
-    "latency"
+    "latency",
+    "circuit-breaker",
+    "bulkhead",
+    "rate-limit",
+    "ai-sdk",
+    "openai",
+    "anthropic",
+    "llm",
+    "middleware",
+    "jest",
+    "vitest",
+    "mock",
+    "simulation"
   ],
   "engines": {
     "node": ">=18"

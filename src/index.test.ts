@@ -650,6 +650,106 @@ describe("cruel.fallback", () => {
   })
 })
 
+describe("cruel.hedge", () => {
+  test("returns first successful result", async () => {
+    let calls = 0
+    const fn = async () => {
+      const myCall = ++calls
+      await new Promise(r => setTimeout(r, myCall * 20))
+      return `result-${myCall}`
+    }
+    const hedged = cruel.hedge(fn, { count: 3, delay: 10 })
+    const result = await hedged()
+    expect(result).toBe("result-1")
+  })
+})
+
+describe("cruel.rateLimiter", () => {
+  test("allows requests within limit", async () => {
+    const fn = async () => "ok"
+    const limited = cruel.rateLimiter(fn, { requests: 2, interval: 1000 })
+    expect(await limited()).toBe("ok")
+    expect(await limited()).toBe("ok")
+  })
+
+  test("rejects when limit exceeded", async () => {
+    const fn = async () => "ok"
+    const limited = cruel.rateLimiter(fn, { requests: 1, interval: 10000 })
+    await limited()
+    await expect(limited()).rejects.toThrow(CruelRateLimitError)
+  })
+})
+
+describe("cruel.cache", () => {
+  test("caches results", async () => {
+    let calls = 0
+    const fn = async (x: number) => {
+      calls++
+      return x * 2
+    }
+    const cached = cruel.cache(fn, { ttl: 10000 })
+    expect(await cached(5)).toBe(10)
+    expect(await cached(5)).toBe(10)
+    expect(calls).toBe(1)
+  })
+
+  test("expires cache after ttl", async () => {
+    let calls = 0
+    const fn = async () => {
+      calls++
+      return calls
+    }
+    const cached = cruel.cache(fn, { ttl: 50 })
+    expect(await cached()).toBe(1)
+    await new Promise(r => setTimeout(r, 60))
+    expect(await cached()).toBe(2)
+  })
+})
+
+describe("cruel.on", () => {
+  test("registers event handler", () => {
+    const events: string[] = []
+    const off = cruel.on((e) => events.push(e.type))
+    expect(typeof off).toBe("function")
+    off()
+  })
+
+  test("removes handler when called", () => {
+    const events: string[] = []
+    const off = cruel.on((e) => events.push(e.type))
+    off()
+    cruel.removeAllListeners()
+  })
+})
+
+describe("cruel.abort", () => {
+  test("throws when signal already aborted", async () => {
+    const controller = new AbortController()
+    controller.abort()
+    const fn = async () => "ok"
+    const abortable = cruel.abort(fn, { signal: controller.signal })
+    await expect(abortable()).rejects.toThrow("operation aborted")
+  })
+
+  test("completes when not aborted", async () => {
+    const controller = new AbortController()
+    const fn = async () => "ok"
+    const abortable = cruel.abort(fn, { signal: controller.signal })
+    expect(await abortable()).toBe("ok")
+  })
+})
+
+describe("cruel.compose", () => {
+  test("composes multiple policies", async () => {
+    const fn = async () => "ok"
+    const composed = cruel.compose(fn, {
+      retry: { attempts: 2, delay: 10 },
+      cache: { ttl: 1000 },
+    })
+    expect(await composed()).toBe("ok")
+  })
+})
+
 describe("errors", () => {
   test("CruelError has code", () => {
     const err = new CruelError("test", "TEST_CODE")

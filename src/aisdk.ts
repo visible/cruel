@@ -16,6 +16,11 @@ interface AISDKChaosOptions extends ChaosOptions {
   toolFailure?: number
   toolTimeout?: number
   maxRetries?: number
+  noSuchTool?: number
+  invalidToolArgs?: number
+  finishReason?: "stop" | "length" | "content-filter" | "tool-calls" | "error"
+  tokenUsage?: { inputTokens?: number; outputTokens?: number }
+  emptyResponse?: number
 }
 
 interface MiddlewareOptions extends AISDKChaosOptions {
@@ -153,6 +158,37 @@ class ToolExecutionError extends AISDKError {
   }
 }
 
+class NoSuchToolError extends AISDKError {
+  toolName: string
+  constructor(toolName: string) {
+    super("no_such_tool", `Tool '${toolName}' does not exist.`, {
+      statusCode: 400,
+    })
+    this.name = "NoSuchToolError"
+    this.toolName = toolName
+  }
+}
+
+class InvalidToolArgumentsError extends AISDKError {
+  toolName: string
+  constructor(toolName: string) {
+    super("invalid_tool_arguments", `Invalid arguments for tool '${toolName}'.`, {
+      statusCode: 400,
+    })
+    this.name = "InvalidToolArgumentsError"
+    this.toolName = toolName
+  }
+}
+
+class EmptyResponseError extends AISDKError {
+  constructor() {
+    super("empty_response", "The model returned an empty response.", {
+      statusCode: 500,
+    })
+    this.name = "EmptyResponseError"
+  }
+}
+
 function random(): number {
   return Math.random()
 }
@@ -196,6 +232,18 @@ async function applyAIChaos(opts: AISDKChaosOptions, modelId?: string): Promise<
 
   if (chance(opts.contentFilter)) {
     throw new ContentFilterError()
+  }
+
+  if (chance(opts.emptyResponse)) {
+    throw new EmptyResponseError()
+  }
+
+  if (chance(opts.noSuchTool)) {
+    throw new NoSuchToolError("unknown_tool")
+  }
+
+  if (chance(opts.invalidToolArgs)) {
+    throw new InvalidToolArgumentsError("tool")
   }
 
   const rl = opts.rateLimit
@@ -482,6 +530,9 @@ const aisdk = {
     QuotaExceededError,
     StreamCutError,
     ToolExecutionError,
+    NoSuchToolError,
+    InvalidToolArgumentsError,
+    EmptyResponseError,
   },
 }
 
@@ -502,6 +553,9 @@ export {
   QuotaExceededError,
   StreamCutError,
   ToolExecutionError,
+  NoSuchToolError,
+  InvalidToolArgumentsError,
+  EmptyResponseError,
   type AISDKChaosOptions,
   type MiddlewareOptions,
   type ProviderOptions,
