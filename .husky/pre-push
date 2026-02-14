@@ -1,0 +1,1 @@
+bun run --filter cruel build && cd packages/cruel && bun test

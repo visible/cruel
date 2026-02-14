@@ -361,17 +361,6 @@
     await expect(api()).rejects.toThrow()
   })
 
-> model override?
-
-  MODEL=gpt-5 bun run examples/ai-sdk/generate-text/openai/basic.ts
-
-  # or with the runner
-  bun run run.ts ai-sdk openai -m gpt-5
-
-  # gateway models keep the provider prefix
-  # openai/gpt-4o -> openai/gpt-5
-  MODEL=gpt-5 bun run examples/ai-gateway/generate-text/openai/basic.ts
-
 > docs?
 
   https://cruel.dev/docs

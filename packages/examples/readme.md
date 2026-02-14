@@ -24,20 +24,6 @@ bun run run.ts with-tools
 bun run run.ts with-diagnostics
 ```
 
-## model override
-
-```bash
-# swap model without changing code
-bun run run.ts ai-sdk openai -m gpt-5
-bun run run.ts ai-gateway openai -m gpt-5
-bun run run.ts ai-gateway openai basic -m gpt-5
-
-# or directly with env var
-MODEL=gpt-5 bun run ai-gateway/generate-text/openai/basic.ts
-```
-
-gateway models keep the provider prefix: `openai/gpt-4o` becomes `openai/gpt-5`
-
 ## structure
 
 ```
