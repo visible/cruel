@@ -1,18 +1,24 @@
 import { readdirSync, statSync } from "node:fs"
 import { join, relative } from "node:path"
 import { spawn } from "node:child_process"
-
-const dim = "\x1b[2m"
-const cyan = "\x1b[36m"
-const green = "\x1b[32m"
-const red = "\x1b[31m"
-const reset = "\x1b[0m"
+import { dim, cyan, green, red, reset } from "./lib/colors"
 
 const root = import.meta.dirname
-const filters = process.argv.slice(2)
+const args = process.argv.slice(2)
+
+let model: string | undefined
+const filters: string[] = []
+
+for (let i = 0; i < args.length; i++) {
+	if ((args[i] === "--model" || args[i] === "-m") && args[i + 1]) {
+		model = args[++i]
+	} else {
+		filters.push(args[i])
+	}
+}
 
 if (filters.length === 0) {
-	console.log(`\n  ${cyan}usage${reset}  bun run run.ts <filters...>\n`)
+	console.log(`\n  ${cyan}usage${reset}  bun run run.ts <filters...> [-m model]\n`)
 	console.log(`  ${dim}by provider${reset}`)
 	console.log(`    bun run run.ts openai`)
 	console.log(`    bun run run.ts anthropic`)
@@ -20,16 +26,15 @@ if (filters.length === 0) {
 	console.log(`  ${dim}by category + provider${reset}`)
 	console.log(`    bun run run.ts ai-gateway openai`)
 	console.log(`    bun run run.ts ai-sdk anthropic`)
-	console.log(`    bun run run.ts ai-gateway heavy`)
 	console.log()
-	console.log(`  ${dim}by function + provider${reset}`)
-	console.log(`    bun run run.ts stream-text google`)
-	console.log(`    bun run run.ts generate-text xai`)
+	console.log(`  ${dim}with custom model${reset}`)
+	console.log(`    bun run run.ts ai-gateway openai -m gpt-5`)
+	console.log(`    bun run run.ts ai-sdk groq -m llama-3.3-70b-versatile`)
 	console.log()
 	console.log(`  ${dim}by type${reset}`)
 	console.log(`    bun run run.ts heavy`)
 	console.log(`    bun run run.ts with-tools`)
-	console.log(`    bun run run.ts reasoning`)
+	console.log(`    bun run run.ts with-diagnostics`)
 	console.log()
 	process.exit(0)
 }
@@ -59,16 +64,20 @@ if (matches.length === 0) {
 	process.exit(1)
 }
 
-console.log(`\n  ${cyan}\u25b8${reset} ${matches.length} examples matching "${filters.join(" ")}"\n`)
+const modelTag = model ? ` ${dim}(model: ${model})${reset}` : ""
+console.log(`\n  ${cyan}\u25b8${reset} ${matches.length} examples matching "${filters.join(" ")}"${modelTag}\n`)
 
 for (const file of matches) {
 	const rel = relative(root, file)
 	console.log(`  ${dim}\u2500\u2500\u2500 ${rel} \u2500\u2500\u2500${reset}\n`)
 
+	const env = { ...process.env }
+	if (model) env.MODEL = model
+
 	const child = spawn("bun", ["run", file], {
 		cwd: root,
 		stdio: "inherit",
-		env: { ...process.env },
+		env,
 	})
 
 	const code = await new Promise<number>((resolve) => {
