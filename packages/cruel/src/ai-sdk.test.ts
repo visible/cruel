@@ -11,6 +11,7 @@ import {
 	cruelTools,
 	cruelTranscriptionModel,
 	cruelVideoModel,
+	diagnostics,
 	presets,
 } from "./ai-sdk"
 import type {
@@ -1285,5 +1286,118 @@ describe("onChaos", () => {
 			try { await collectStream(result.stream) } catch {}
 			expect(events.some((e) => e.type === "streamCut")).toBe(true)
 		})
+	})
+})
+
+describe("diagnostics", () => {
+	test("context initializes empty", () => {
+		const ctx = diagnostics.context()
+		expect(ctx.events).toEqual([])
+		expect(ctx.requests).toEqual([])
+		expect(ctx.current).toBe(0)
+	})
+
+	test("tracker records events with timestamp and request id", () => {
+		const ctx = diagnostics.context()
+		const track = diagnostics.tracker(ctx)
+		diagnostics.before(ctx, 1)
+		track({ type: "rateLimit", modelId: "gpt-4o" })
+		track({ type: "delay", modelId: "gpt-4o", ms: 500 })
+		expect(ctx.events).toHaveLength(2)
+		expect(ctx.events[0].type).toBe("rateLimit")
+		expect(ctx.events[0].req).toBe(1)
+		expect(ctx.events[1].type).toBe("delay")
+		expect(ctx.events[1].ts).toBeGreaterThanOrEqual(0)
+	})
+
+	test("success records a passing request", () => {
+		const ctx = diagnostics.context()
+		diagnostics.before(ctx, 1)
+		diagnostics.success(ctx, 1, 150, "hello world")
+		expect(ctx.requests).toHaveLength(1)
+		expect(ctx.requests[0].ok).toBe(true)
+		expect(ctx.requests[0].ms).toBe(150)
+		expect(ctx.requests[0].text).toBe("hello world")
+	})
+
+	test("failure records a failing request", () => {
+		const ctx = diagnostics.context()
+		diagnostics.before(ctx, 1)
+		const err = new CruelAPIError({ message: "Rate limit exceeded", statusCode: 429 })
+		diagnostics.failure(ctx, 1, 200, err)
+		expect(ctx.requests).toHaveLength(1)
+		expect(ctx.requests[0].ok).toBe(false)
+		expect(ctx.requests[0].status).toBe(429)
+		expect(ctx.requests[0].retryable).toBe(true)
+	})
+
+	test("stats computes correct summary", () => {
+		const ctx = diagnostics.context()
+		const track = diagnostics.tracker(ctx)
+
+		diagnostics.before(ctx, 1)
+		track({ type: "delay", modelId: "test", ms: 100 })
+		diagnostics.success(ctx, 1, 200, "ok")
+
+		diagnostics.before(ctx, 2)
+		track({ type: "rateLimit", modelId: "test" })
+		diagnostics.failure(ctx, 2, 50, new Error("rate limited"))
+
+		diagnostics.before(ctx, 3)
+		track({ type: "delay", modelId: "test", ms: 300 })
+		track({ type: "partialResponse", modelId: "test" })
+		diagnostics.success(ctx, 3, 400, "partial")
+
+		const s = diagnostics.stats(ctx)
+		expect(s.total).toBe(3)
+		expect(s.succeeded).toBe(2)
+		expect(s.failed).toBe(1)
+		expect(s.successRate).toBeCloseTo(0.667, 2)
+		expect(s.totalEvents).toBe(4)
+		expect(s.events).toHaveLength(3)
+		expect(s.events[0].type).toBe("delay")
+		expect(s.events[0].count).toBe(2)
+		expect(s.latency.success.avg).toBe(300)
+		expect(s.latency.failure.avg).toBe(50)
+		expect(s.errors).toHaveLength(1)
+	})
+
+	test("stats returns zero values for empty context", () => {
+		const ctx = diagnostics.context()
+		const s = diagnostics.stats(ctx)
+		expect(s.total).toBe(0)
+		expect(s.succeeded).toBe(0)
+		expect(s.failed).toBe(0)
+		expect(s.successRate).toBe(0)
+		expect(s.totalEvents).toBe(0)
+		expect(s.events).toEqual([])
+	})
+
+	test("failure counts retries from chaos events", () => {
+		const ctx = diagnostics.context()
+		const track = diagnostics.tracker(ctx)
+		diagnostics.before(ctx, 1)
+		track({ type: "rateLimit", modelId: "test" })
+		track({ type: "overloaded", modelId: "test" })
+		track({ type: "rateLimit", modelId: "test" })
+		diagnostics.failure(ctx, 1, 6000, new Error("failed after retries"))
+		expect(ctx.requests[0].retries).toBe(3)
+	})
+
+	test("events are grouped by request", () => {
+		const ctx = diagnostics.context()
+		const track = diagnostics.tracker(ctx)
+
+		diagnostics.before(ctx, 1)
+		track({ type: "delay", modelId: "test", ms: 100 })
+		diagnostics.success(ctx, 1, 200, "ok")
+
+		diagnostics.before(ctx, 2)
+		track({ type: "rateLimit", modelId: "test" })
+		track({ type: "streamCut", modelId: "test" })
+		diagnostics.failure(ctx, 2, 100, new Error("cut"))
+
+		expect(ctx.requests[0].events).toHaveLength(1)
+		expect(ctx.requests[1].events).toHaveLength(2)
 	})
 })
