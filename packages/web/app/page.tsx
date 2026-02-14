@@ -40,7 +40,7 @@ export default function Page() {
 							<div className="hidden sm:block">
 								<pre className="text-[11px] leading-[1.75] font-mono">
 									{code.split("\n").map((line, i) => (
-										<div key={i}>{tokenize(line)}</div>
+										<div key={`${i}-${line}`}>{tokenize(line)}</div>
 									))}
 								</pre>
 							</div>
