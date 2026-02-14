@@ -1,47 +1,44 @@
+import {
+	CruelAPIError,
+	contentFilterError,
+	contextLengthError,
+	emptyResponseError,
+	invalidApiKeyError,
+	modelUnavailableError,
+	overloadedError,
+	quotaExceededError,
+	rateLimitError,
+	streamCutError,
+} from "./errors.js"
 import type {
-	ChaosEvent,
+	CruelChaosOptions,
+	CruelEmbeddingOptions,
+	CruelImageOptions,
+	CruelMiddlewareOptions,
+	CruelModelOptions,
+	CruelProviderOptions,
+	CruelSpeechOptions,
+	CruelTranscriptionOptions,
+	CruelVideoOptions,
+	EmbeddingModelV3,
+	EmbeddingModelV3CallOptions,
+	ImageModelV3,
+	ImageModelV3CallOptions,
 	LanguageModelV3,
 	LanguageModelV3CallOptions,
 	LanguageModelV3Content,
 	LanguageModelV3GenerateResult,
 	LanguageModelV3Middleware,
 	LanguageModelV3StreamPart,
-	LanguageModelV3StreamResult,
 	LanguageModelV3Usage,
-	EmbeddingModelV3,
-	EmbeddingModelV3CallOptions,
-	ImageModelV3,
-	ImageModelV3CallOptions,
+	ProviderV3,
 	SpeechModelV3,
 	SpeechModelV3CallOptions,
 	TranscriptionModelV3,
 	TranscriptionModelV3CallOptions,
 	VideoModelV3,
 	VideoModelV3CallOptions,
-	ProviderV3,
-	CruelChaosOptions,
-	CruelModelOptions,
-	CruelProviderOptions,
-	CruelMiddlewareOptions,
-	CruelEmbeddingOptions,
-	CruelImageOptions,
-	CruelSpeechOptions,
-	CruelTranscriptionOptions,
-	CruelVideoOptions,
 } from "./types.js"
-
-import {
-	CruelAPIError,
-	rateLimitError,
-	overloadedError,
-	contextLengthError,
-	contentFilterError,
-	modelUnavailableError,
-	invalidApiKeyError,
-	quotaExceededError,
-	streamCutError,
-	emptyResponseError,
-} from "./errors.js"
 
 function random(): number {
 	return Math.random()
@@ -67,10 +64,7 @@ function sleep(ms: number): Promise<void> {
 	return new Promise((r) => setTimeout(r, ms))
 }
 
-async function applyChaos(
-	opts: CruelChaosOptions | undefined,
-	modelId?: string,
-): Promise<void> {
+async function applyChaos(opts: CruelChaosOptions | undefined, modelId?: string): Promise<void> {
 	if (!opts) return
 	const id = modelId ?? "unknown"
 	const emit = opts.onChaos
@@ -150,9 +144,7 @@ function applyPostChaos(
 			...modified,
 			content: modified.content.map((item: LanguageModelV3Content) => {
 				if (item.type === "text" && item.text.length > 0) {
-					const cutPoint =
-						Math.floor(random() * item.text.length * 0.7) +
-						item.text.length * 0.1
+					const cutPoint = Math.floor(random() * item.text.length * 0.7) + item.text.length * 0.1
 					return { ...item, text: item.text.slice(0, cutPoint) }
 				}
 				return item
@@ -210,112 +202,99 @@ function applyStreamChaos(
 		const delay = opts.slowTokens
 		let emitted = false
 		result = result.pipeThrough(
-			new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>(
-				{
-					async transform(chunk, controller) {
-						if (chunk.type === "text-delta") {
-							const ms = getDelay(delay)
-							if (!emitted) {
-								emit?.({ type: "slowTokens", modelId: id, ms })
-								emitted = true
-							}
-							await sleep(ms)
+			new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>({
+				async transform(chunk, controller) {
+					if (chunk.type === "text-delta") {
+						const ms = getDelay(delay)
+						if (!emitted) {
+							emit?.({ type: "slowTokens", modelId: id, ms })
+							emitted = true
 						}
-						controller.enqueue(chunk)
-					},
+						await sleep(ms)
+					}
+					controller.enqueue(chunk)
 				},
-			),
+			}),
 		)
 	}
 
 	if (opts.corruptChunks) {
 		const rate = opts.corruptChunks
 		result = result.pipeThrough(
-			new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>(
-				{
-					transform(chunk, controller) {
-						if (chance(rate) && chunk.type === "text-delta") {
-							emit?.({ type: "corruptChunk", modelId: id })
-							const text = chunk.delta
-							const pos = Math.floor(random() * text.length)
-							controller.enqueue({
-								...chunk,
-								delta: `${text.slice(0, pos)}\uFFFD${text.slice(pos + 1)}`,
-							})
-							return
-						}
-						controller.enqueue(chunk)
-					},
+			new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>({
+				transform(chunk, controller) {
+					if (chance(rate) && chunk.type === "text-delta") {
+						emit?.({ type: "corruptChunk", modelId: id })
+						const text = chunk.delta
+						const pos = Math.floor(random() * text.length)
+						controller.enqueue({
+							...chunk,
+							delta: `${text.slice(0, pos)}\uFFFD${text.slice(pos + 1)}`,
+						})
+						return
+					}
+					controller.enqueue(chunk)
 				},
-			),
+			}),
 		)
 	}
 
 	if (opts.streamCut) {
 		const rate = opts.streamCut
 		result = result.pipeThrough(
-			new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>(
-				{
-					transform(chunk, controller) {
-						if (chance(rate) && chunk.type === "text-delta") {
-							emit?.({ type: "streamCut", modelId: id })
-							controller.error(streamCutError())
-							return
-						}
-						controller.enqueue(chunk)
-					},
+			new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>({
+				transform(chunk, controller) {
+					if (chance(rate) && chunk.type === "text-delta") {
+						emit?.({ type: "streamCut", modelId: id })
+						controller.error(streamCutError())
+						return
+					}
+					controller.enqueue(chunk)
 				},
-			),
+			}),
 		)
 	}
 
 	if (opts.tokenUsage) {
 		const override = opts.tokenUsage
 		result = result.pipeThrough(
-			new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>(
-				{
-					transform(chunk, controller) {
-						if (chunk.type === "finish") {
-							controller.enqueue({
-								...chunk,
-								usage: buildUsage(override, chunk.usage),
-							})
-							return
-						}
-						controller.enqueue(chunk)
-					},
+			new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>({
+				transform(chunk, controller) {
+					if (chunk.type === "finish") {
+						controller.enqueue({
+							...chunk,
+							usage: buildUsage(override, chunk.usage),
+						})
+						return
+					}
+					controller.enqueue(chunk)
 				},
-			),
+			}),
 		)
 	}
 
 	if (opts.finishReason) {
 		const reason = opts.finishReason
 		result = result.pipeThrough(
-			new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>(
-				{
-					transform(chunk, controller) {
-						if (chunk.type === "finish") {
-							controller.enqueue({
-								...chunk,
-								finishReason: { unified: reason, raw: undefined },
-							})
-							return
-						}
-						controller.enqueue(chunk)
-					},
+			new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>({
+				transform(chunk, controller) {
+					if (chunk.type === "finish") {
+						controller.enqueue({
+							...chunk,
+							finishReason: { unified: reason, raw: undefined },
+						})
+						return
+					}
+					controller.enqueue(chunk)
 				},
-			),
+			}),
 		)
 	}
 
 	return result
 }
 
-function cruelModel<T extends LanguageModelV3>(
-	model: T,
-	options?: CruelModelOptions,
-): T {
+function cruelModel<T extends LanguageModelV3>(model: T, options?: CruelModelOptions): T {
 	const modelId = model.modelId
 	return {
 		...model,
@@ -351,10 +330,7 @@ function cruelEmbeddingModel<T extends EmbeddingModelV3>(
 	} as T
 }
 
-function cruelImageModel<T extends ImageModelV3>(
-	model: T,
-	options?: CruelImageOptions,
-): T {
+function cruelImageModel<T extends ImageModelV3>(model: T, options?: CruelImageOptions): T {
 	const modelId = model.modelId
 	return {
 		...model,
@@ -366,10 +342,7 @@ function cruelImageModel<T extends ImageModelV3>(
 	} as T
 }
 
-function cruelSpeechModel<T extends SpeechModelV3>(
-	model: T,
-	options?: CruelSpeechOptions,
-): T {
+function cruelSpeechModel<T extends SpeechModelV3>(model: T, options?: CruelSpeechOptions): T {
 	const modelId = model.modelId
 	return {
 		...model,
@@ -396,10 +369,7 @@ function cruelTranscriptionModel<T extends TranscriptionModelV3>(
 	} as T
 }
 
-function cruelVideoModel<T extends VideoModelV3>(
-	model: T,
-	options?: CruelVideoOptions,
-): T {
+function cruelVideoModel<T extends VideoModelV3>(model: T, options?: CruelVideoOptions): T {
 	const modelId = model.modelId
 	return {
 		...model,
@@ -433,14 +403,23 @@ function wrapProviderModel(
 	return cruelModel(model as LanguageModelV3, opts)
 }
 
-function cruelProvider<T extends ProviderV3>(
-	provider: T,
-	options?: CruelProviderOptions,
-): T {
+const modelMethods = new Set([
+	"languageModel",
+	"embeddingModel",
+	"textEmbeddingModel",
+	"imageModel",
+	"speechModel",
+	"transcriptionModel",
+	"videoModel",
+	"rankingModel",
+	"rerankingModel",
+])
+
+function cruelProvider<T extends ProviderV3>(provider: T, options?: CruelProviderOptions): T {
 	return new Proxy(provider, {
 		get(target, prop) {
 			const value = Reflect.get(target, prop)
-			if (typeof value === "function") {
+			if (typeof value === "function" && typeof prop === "string" && modelMethods.has(prop)) {
 				return (...args: unknown[]) => {
 					const model = value.apply(target, args)
 					const modelId = typeof args[0] === "string" ? args[0] : undefined
@@ -460,9 +439,7 @@ function cruelProvider<T extends ProviderV3>(
 	})
 }
 
-function cruelMiddleware(
-	options?: CruelMiddlewareOptions,
-): LanguageModelV3Middleware {
+function cruelMiddleware(options?: CruelMiddlewareOptions): LanguageModelV3Middleware {
 	return {
 		specificationVersion: "v3",
 		wrapGenerate: async ({ doGenerate, model }) => {
@@ -504,15 +481,13 @@ function cruelTool<T extends { execute: (...args: never[]) => unknown }>(
 	}
 }
 
-function cruelTools<
-	T extends Record<string, { execute: (...args: never[]) => unknown }>,
->(tools: T, options?: CruelChaosOptions): T {
+function cruelTools<T extends Record<string, { execute: (...args: never[]) => unknown }>>(
+	tools: T,
+	options?: CruelChaosOptions,
+): T {
 	const wrapped = {} as Record<string, unknown>
 	for (const [name, tool] of Object.entries(tools)) {
-		wrapped[name] = cruelTool(
-			tool as { execute: (...args: never[]) => unknown },
-			options,
-		)
+		wrapped[name] = cruelTool(tool as { execute: (...args: never[]) => unknown }, options)
 	}
 	return wrapped as T
 }
@@ -570,14 +545,14 @@ const presets = {
 	} satisfies CruelChaosOptions,
 }
 
-export { diagnostics } from "./diagnostics.js"
 export type {
 	DiagnosticsContext,
 	DiagnosticsStats,
-	RequestResult,
 	EventCount,
 	LatencyStats,
+	RequestResult,
 } from "./diagnostics.js"
+export { diagnostics } from "./diagnostics.js"
 
 export {
 	cruelModel,
@@ -605,25 +580,15 @@ export {
 
 export type {
 	ChaosEvent,
-	JSONValue,
-	JSONObject,
-	JSONArray,
-	SharedV3ProviderOptions,
-	SharedV3ProviderMetadata,
-	LanguageModelV3,
-	LanguageModelV3CallOptions,
-	LanguageModelV3Content,
-	LanguageModelV3FinishReason,
-	LanguageModelV3UnifiedFinishReason,
-	LanguageModelV3FunctionTool,
-	LanguageModelV3ProviderTool,
-	LanguageModelV3GenerateResult,
-	LanguageModelV3Middleware,
-	LanguageModelV3Prompt,
-	LanguageModelV3StreamPart,
-	LanguageModelV3StreamResult,
-	LanguageModelV3ToolChoice,
-	LanguageModelV3Usage,
+	CruelChaosOptions,
+	CruelEmbeddingOptions,
+	CruelImageOptions,
+	CruelMiddlewareOptions,
+	CruelModelOptions,
+	CruelProviderOptions,
+	CruelSpeechOptions,
+	CruelTranscriptionOptions,
+	CruelVideoOptions,
 	EmbeddingModelV3,
 	EmbeddingModelV3CallOptions,
 	EmbeddingModelV3Embedding,
@@ -631,6 +596,27 @@ export type {
 	ImageModelV3,
 	ImageModelV3CallOptions,
 	ImageModelV3Result,
+	JSONArray,
+	JSONObject,
+	JSONValue,
+	LanguageModelV3,
+	LanguageModelV3CallOptions,
+	LanguageModelV3Content,
+	LanguageModelV3FinishReason,
+	LanguageModelV3FunctionTool,
+	LanguageModelV3GenerateResult,
+	LanguageModelV3Middleware,
+	LanguageModelV3Prompt,
+	LanguageModelV3ProviderTool,
+	LanguageModelV3StreamPart,
+	LanguageModelV3StreamResult,
+	LanguageModelV3ToolChoice,
+	LanguageModelV3UnifiedFinishReason,
+	LanguageModelV3Usage,
+	ProviderV3,
+	SharedV3ProviderMetadata,
+	SharedV3ProviderOptions,
+	SharedV3Warning,
 	SpeechModelV3,
 	SpeechModelV3CallOptions,
 	SpeechModelV3Result,
@@ -640,15 +626,4 @@ export type {
 	VideoModelV3,
 	VideoModelV3CallOptions,
 	VideoModelV3Result,
-	SharedV3Warning,
-	ProviderV3,
-	CruelChaosOptions,
-	CruelModelOptions,
-	CruelProviderOptions,
-	CruelMiddlewareOptions,
-	CruelEmbeddingOptions,
-	CruelImageOptions,
-	CruelSpeechOptions,
-	CruelTranscriptionOptions,
-	CruelVideoOptions,
 } from "./types.js"
