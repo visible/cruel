@@ -570,6 +570,15 @@ const presets = {
 	} satisfies CruelChaosOptions,
 }
 
+export { diagnostics } from "./diagnostics.js"
+export type {
+	DiagnosticsContext,
+	DiagnosticsStats,
+	RequestResult,
+	EventCount,
+	LatencyStats,
+} from "./diagnostics.js"
+
 export {
 	cruelModel,
 	cruelEmbeddingModel,
