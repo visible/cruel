@@ -651,14 +651,14 @@ describe("cruel.withTimeout", () => {
 
 describe("cruel.fallback", () => {
 	test("returns result on success", async () => {
-		const fn = async () => "ok"
+		const fn = async (..._args: unknown[]) => "ok"
 		const fallbackFn = cruel.fallback(fn, { fallback: "fallback" })
 		const result = await fallbackFn()
 		expect(result).toBe("ok")
 	})
 
 	test("returns fallback on failure", async () => {
-		const fn = async () => {
+		const fn = async (..._args: unknown[]) => {
 			throw new Error("fail")
 		}
 		const fallbackFn = cruel.fallback(fn, { fallback: "fallback" })
@@ -667,7 +667,7 @@ describe("cruel.fallback", () => {
 	})
 
 	test("calls fallback function", async () => {
-		const fn = async () => {
+		const fn = async (..._args: unknown[]) => {
 			throw new Error("fail")
 		}
 		const fallbackFn = cruel.fallback(fn, { fallback: () => "computed" })
@@ -709,9 +709,9 @@ describe("cruel.rateLimiter", () => {
 describe("cruel.cache", () => {
 	test("caches results", async () => {
 		let calls = 0
-		const fn = async (x: number) => {
+		const fn = async (...args: unknown[]) => {
 			calls++
-			return x * 2
+			return (args[0] as number) * 2
 		}
 		const cached = cruel.cache(fn, { ttl: 10000 })
 		expect(await cached(5)).toBe(10)
