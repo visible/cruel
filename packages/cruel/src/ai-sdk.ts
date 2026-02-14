@@ -399,6 +399,9 @@ function wrapProviderModel(
 		if (prop === "transcriptionModel") {
 			return cruelTranscriptionModel(model as TranscriptionModelV3, opts)
 		}
+		if (prop === "videoModel") {
+			return cruelVideoModel(model as VideoModelV3, opts)
+		}
 	}
 	return cruelModel(model as LanguageModelV3, opts)
 }
