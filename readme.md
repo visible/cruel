@@ -93,12 +93,12 @@
 
 > ai sdk v6 integration?
 
-  import { aisdk, wrapModel, wrapProvider } from "cruel"
+  import { cruelModel, cruelProvider, presets } from "cruel/ai-sdk"
   import { generateText, streamText } from "ai"
   import { openai } from "@ai-sdk/openai"
 
   // wrap entire provider
-  const chaosOpenAI = wrapProvider(openai, {
+  const chaosOpenAI = cruelProvider(openai, {
     rateLimit: 0.1,
     overloaded: 0.05,
     delay: [100, 500],
@@ -106,16 +106,16 @@
 
   // use with generateText
   const result = await generateText({
-    model: chaosOpenAI("gpt-4"),
+    model: chaosOpenAI("gpt-4o"),
     prompt: "hello",
   })
 
   // or wrap individual model
-  const model = wrapModel(openai("gpt-4"), aisdk.presets.realistic)
+  const model = cruelModel(openai("gpt-4o"), presets.realistic)
 
   // streaming with chaos
   const { textStream } = await streamText({
-    model: wrapModel(openai("gpt-4"), {
+    model: cruelModel(openai("gpt-4o"), {
       streamCut: 0.1,
       slowTokens: [50, 200],
     }),
@@ -124,61 +124,52 @@
 
 > ai sdk middleware?
 
-  import { aisdk } from "cruel"
+  import { cruelMiddleware } from "cruel/ai-sdk"
   import { wrapLanguageModel } from "ai"
   import { openai } from "@ai-sdk/openai"
 
   // create chaos middleware
-  const chaosMiddleware = aisdk.middleware({
+  const middleware = cruelMiddleware({
     rateLimit: 0.1,
     overloaded: 0.05,
     streamCut: 0.1,
-    log: true,
   })
 
   // wrap model with middleware
   const model = wrapLanguageModel({
-    model: openai("gpt-4"),
-    middleware: chaosMiddleware,
+    model: openai("gpt-4o"),
+    middleware,
   })
 
 > ai sdk presets?
 
-  aisdk.presets.realistic    // light, production-like
-  aisdk.presets.unstable     // medium chaos
-  aisdk.presets.harsh        // aggressive chaos
-  aisdk.presets.nightmare    // extreme chaos
-  aisdk.presets.apocalypse   // everything fails
+  import { presets } from "cruel/ai-sdk"
+
+  presets.realistic    // light, production-like
+  presets.unstable     // medium chaos
+  presets.harsh        // aggressive chaos
+  presets.nightmare    // extreme chaos
+  presets.apocalypse   // everything fails
 
 > ai sdk errors?
 
-  import {
-    RateLimitError,
-    OverloadedError,
-    ContextLengthError,
-    ContentFilterError,
-    ModelUnavailableError,
-    InvalidApiKeyError,
-    QuotaExceededError,
-    StreamCutError,
-  } from "cruel"
+  import { CruelAPIError } from "cruel/ai-sdk"
+  import { APICallError } from "ai"
 
   try {
     await generateText({ model, prompt })
   } catch (e) {
-    if (e instanceof RateLimitError) {
-      console.log("retry after:", e.retryAfter)
-    }
-    if (e instanceof OverloadedError) {
-      console.log("model overloaded, try later")
+    if (APICallError.isInstance(e)) {
+      console.log("status:", e.statusCode)
+      console.log("retryable:", e.isRetryable)
     }
   }
 
 > wrap ai tools?
 
-  import { wrapTools } from "cruel"
+  import { cruelTools } from "cruel/ai-sdk"
 
-  const tools = wrapTools({
+  const tools = cruelTools({
     search: { execute: searchFn },
     calculate: { execute: calcFn },
   }, {
@@ -369,6 +360,10 @@
     cruel.enable({ fail: 1 })
     await expect(api()).rejects.toThrow()
   })
+
+> docs?
+
+  https://cruel.dev/docs
 
 > features?
 
