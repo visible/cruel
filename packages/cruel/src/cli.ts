@@ -120,10 +120,10 @@ async function testEndpoint(url: string, opts: Record<string, string | number | 
 	if (circuitThreshold) console.log(colors.dim(`circuit breaker: ${circuitThreshold} threshold`))
 	console.log()
 
-	let fetchFn: typeof fetch = cruel(fetch, chaosOpts) as typeof fetch
+	let fetchFn = cruel(fetch as (...args: unknown[]) => unknown, chaosOpts) as typeof fetch
 
 	if (retryAttempts) {
-		fetchFn = cruel.retry(fetchFn, {
+		fetchFn = cruel.retry(fetchFn as (...args: unknown[]) => unknown, {
 			attempts: retryAttempts,
 			delay: 100,
 			backoff: "exponential",
@@ -131,7 +131,7 @@ async function testEndpoint(url: string, opts: Record<string, string | number | 
 	}
 
 	if (circuitThreshold) {
-		const cb = cruel.circuitBreaker(fetchFn, {
+		const cb = cruel.circuitBreaker(fetchFn as (...args: unknown[]) => unknown, {
 			threshold: circuitThreshold,
 			timeout: 10000,
 		})
