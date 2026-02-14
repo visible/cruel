@@ -468,6 +468,49 @@ describe("cruelProvider", () => {
 		const wrapped = cruelProvider(provider)
 		expect(wrapped.specificationVersion).toBe("v3")
 	})
+
+	test("wraps embeddingModel with cruelEmbeddingModel", async () => {
+		const provider: ProviderV3 = {
+			specificationVersion: "v3",
+			languageModel: () => createMockModel(),
+			embeddingModel: () => createMockEmbeddingModel(),
+			imageModel: () => createMockImageModel(),
+		}
+		const wrapped = cruelProvider(provider, { rateLimit: 1 })
+		const embedding = wrapped.embeddingModel("test-embed")
+		try {
+			await embedding.doEmbed({ values: ["test"] })
+			expect(true).toBe(false)
+		} catch (e) {
+			expect((e as CruelAPIError).statusCode).toBe(429)
+		}
+	})
+
+	test("wraps imageModel with cruelImageModel", async () => {
+		const provider: ProviderV3 = {
+			specificationVersion: "v3",
+			languageModel: () => createMockModel(),
+			embeddingModel: () => createMockEmbeddingModel(),
+			imageModel: () => createMockImageModel(),
+		}
+		const wrapped = cruelProvider(provider, { rateLimit: 1 })
+		const image = wrapped.imageModel("test-image")
+		try {
+			await image.doGenerate({
+				prompt: "test",
+				n: 1,
+				size: undefined,
+				aspectRatio: undefined,
+				seed: undefined,
+				files: undefined,
+				mask: undefined,
+				providerOptions: {},
+			})
+			expect(true).toBe(false)
+		} catch (e) {
+			expect((e as CruelAPIError).statusCode).toBe(429)
+		}
+	})
 })
 
 describe("cruelMiddleware", () => {

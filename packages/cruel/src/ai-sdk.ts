@@ -43,13 +43,6 @@ import {
 	emptyResponseError,
 } from "./errors.js"
 
-function resolveModelId(id: string): string {
-	const override = typeof globalThis.process !== "undefined" ? globalThis.process.env?.MODEL : undefined
-	if (!override) return id
-	if (id.includes("/")) return `${id.split("/")[0]}/${override}`
-	return override
-}
-
 function random(): number {
 	return Math.random()
 }
@@ -323,7 +316,7 @@ function cruelModel<T extends LanguageModelV3>(
 	model: T,
 	options?: CruelModelOptions,
 ): T {
-	const modelId = resolveModelId(model.modelId)
+	const modelId = model.modelId
 	return {
 		...model,
 		modelId,
@@ -347,7 +340,7 @@ function cruelEmbeddingModel<T extends EmbeddingModelV3>(
 	model: T,
 	options?: CruelEmbeddingOptions,
 ): T {
-	const modelId = resolveModelId(model.modelId)
+	const modelId = model.modelId
 	return {
 		...model,
 		modelId,
@@ -362,7 +355,7 @@ function cruelImageModel<T extends ImageModelV3>(
 	model: T,
 	options?: CruelImageOptions,
 ): T {
-	const modelId = resolveModelId(model.modelId)
+	const modelId = model.modelId
 	return {
 		...model,
 		modelId,
@@ -377,7 +370,7 @@ function cruelSpeechModel<T extends SpeechModelV3>(
 	model: T,
 	options?: CruelSpeechOptions,
 ): T {
-	const modelId = resolveModelId(model.modelId)
+	const modelId = model.modelId
 	return {
 		...model,
 		modelId,
@@ -392,7 +385,7 @@ function cruelTranscriptionModel<T extends TranscriptionModelV3>(
 	model: T,
 	options?: CruelTranscriptionOptions,
 ): T {
-	const modelId = resolveModelId(model.modelId)
+	const modelId = model.modelId
 	return {
 		...model,
 		modelId,
@@ -407,7 +400,7 @@ function cruelVideoModel<T extends VideoModelV3>(
 	model: T,
 	options?: CruelVideoOptions,
 ): T {
-	const modelId = resolveModelId(model.modelId)
+	const modelId = model.modelId
 	return {
 		...model,
 		modelId,
