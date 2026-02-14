@@ -459,7 +459,7 @@ function cruelMiddleware(options?: CruelMiddlewareOptions): LanguageModelV3Middl
 	}
 }
 
-function cruelTool<T extends { execute: (...args: never[]) => unknown }>(
+function cruelTool<T extends { execute: (...args: any[]) => any }>(
 	tool: T,
 	options?: CruelChaosOptions,
 ): T {
@@ -482,7 +482,7 @@ function cruelTool<T extends { execute: (...args: never[]) => unknown }>(
 	}
 }
 
-function cruelTools<T extends Record<string, { execute: (...args: never[]) => unknown }>>(
+function cruelTools<T extends Record<string, { execute: (...args: any[]) => any }>>(
 	tools: T,
 	options?: CruelChaosOptions,
 ): T {
