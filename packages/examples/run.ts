@@ -9,17 +9,27 @@ const red = "\x1b[31m"
 const reset = "\x1b[0m"
 
 const root = import.meta.dirname
-const filter = process.argv[2]
+const filters = process.argv.slice(2)
 
-if (!filter) {
-	console.log(`\n  ${cyan}usage${reset}  bun run run.ts <filter>\n`)
-	console.log(`  ${dim}examples${reset}`)
-	console.log(`    bun run run.ts openai      ${dim}all openai examples${reset}`)
-	console.log(`    bun run run.ts google       ${dim}all google examples${reset}`)
-	console.log(`    bun run run.ts heavy        ${dim}all heavy/stress tests${reset}`)
-	console.log(`    bun run run.ts ai-sdk       ${dim}all ai-sdk examples${reset}`)
-	console.log(`    bun run run.ts ai-gateway   ${dim}all ai-gateway examples${reset}`)
-	console.log(`    bun run run.ts stream-text  ${dim}all stream-text examples${reset}`)
+if (filters.length === 0) {
+	console.log(`\n  ${cyan}usage${reset}  bun run run.ts <filters...>\n`)
+	console.log(`  ${dim}by provider${reset}`)
+	console.log(`    bun run run.ts openai`)
+	console.log(`    bun run run.ts anthropic`)
+	console.log()
+	console.log(`  ${dim}by category + provider${reset}`)
+	console.log(`    bun run run.ts ai-gateway openai`)
+	console.log(`    bun run run.ts ai-sdk anthropic`)
+	console.log(`    bun run run.ts ai-gateway heavy`)
+	console.log()
+	console.log(`  ${dim}by function + provider${reset}`)
+	console.log(`    bun run run.ts stream-text google`)
+	console.log(`    bun run run.ts generate-text xai`)
+	console.log()
+	console.log(`  ${dim}by type${reset}`)
+	console.log(`    bun run run.ts heavy`)
+	console.log(`    bun run run.ts with-tools`)
+	console.log(`    bun run run.ts reasoning`)
 	console.log()
 	process.exit(0)
 }
@@ -41,15 +51,15 @@ function collect(dir: string): string[] {
 const all = collect(root)
 const matches = all.filter((f) => {
 	const rel = relative(root, f)
-	return rel.includes(filter)
+	return filters.every((filter) => rel.includes(filter))
 })
 
 if (matches.length === 0) {
-	console.log(`\n  ${red}\u2717${reset} no examples match "${filter}"\n`)
+	console.log(`\n  ${red}\u2717${reset} no examples match "${filters.join(" ")}"\n`)
 	process.exit(1)
 }
 
-console.log(`\n  ${cyan}\u25b8${reset} ${matches.length} examples matching "${filter}"\n`)
+console.log(`\n  ${cyan}\u25b8${reset} ${matches.length} examples matching "${filters.join(" ")}"\n`)
 
 for (const file of matches) {
 	const rel = relative(root, file)
