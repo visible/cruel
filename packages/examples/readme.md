@@ -30,8 +30,9 @@ bun run run.ts with-diagnostics
 # swap model without changing code
 bun run run.ts ai-sdk openai -m gpt-5
 bun run run.ts ai-gateway openai -m gpt-5
+bun run run.ts ai-gateway openai basic -m gpt-5
 
-# or directly
+# or directly with env var
 MODEL=gpt-5 bun run ai-gateway/generate-text/openai/basic.ts
 ```
 
