@@ -1,6 +1,6 @@
 type MaybePromise<T> = T | Promise<T>
-type AnyFn = (...args: unknown[]) => unknown
-type AsyncFn<T> = (...args: unknown[]) => Promise<T>
+type AnyFn = (...args: never[]) => unknown
+type AsyncFn<T> = (...args: never[]) => Promise<T>
 type Settled<T> = T extends PromiseLike<infer U> ? U : T
 type FallbackValue<T> = [T] extends [never] ? unknown : T
 

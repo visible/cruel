@@ -34,6 +34,7 @@
 		"build": "tsup",
 		"dev": "tsup --watch",
 		"test": "bun test",
+		"typecheck": "bunx tsc --noEmit -p tsconfig.json && bunx tsc --noEmit -p tsconfig.types.json",
 		"prepublishOnly": "bun run build"
 	},
 	"keywords": [
