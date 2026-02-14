@@ -143,12 +143,27 @@ to add examples for a new provider (e.g. openrouter):
 ```bash
 cd packages/examples
 
-bun run examples:anthropic     # all anthropic examples
-bun run examples:openai        # all openai examples
-bun run examples:heavy         # all stress tests
-bun run examples:ai-gateway    # all gateway examples
+bun run examples:ai-sdk:openai        # all openai ai-sdk examples
+bun run examples:ai-gateway:anthropic  # all anthropic gateway examples
+bun run examples:heavy                 # all stress tests
 
-bun run run.ts google          # custom filter
-bun run run.ts stream-text     # all stream-text examples
-bun run run.ts with-tools      # all tool examples
+bun run run.ts google                  # custom filter
+bun run run.ts stream-text             # all stream-text examples
+bun run run.ts with-diagnostics        # all diagnostics examples
 ```
+
+## model override
+
+cruel supports a `MODEL` env var to swap the model at runtime without changing any code. this is useful when a new model comes out and you want to test it against existing examples
+
+```bash
+bun run run.ts ai-sdk openai -m gpt-5
+bun run run.ts ai-gateway openai -m gpt-5
+MODEL=gpt-5 bun run ai-sdk/generate-text/openai/basic.ts
+```
+
+for gateway models, the provider prefix is preserved automatically:
+- `openai/gpt-4o` with `-m gpt-5` becomes `openai/gpt-5`
+- `anthropic/claude-sonnet-4-5-20250929` with `-m claude-opus-4` becomes `anthropic/claude-opus-4`
+
+this works for any provider - if openrouter or tanstack adds examples, their models are swappable too

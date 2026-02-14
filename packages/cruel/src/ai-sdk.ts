@@ -43,6 +43,13 @@ import {
 	emptyResponseError,
 } from "./errors.js"
 
+function resolveModelId(id: string): string {
+	const override = typeof globalThis.process !== "undefined" ? globalThis.process.env?.MODEL : undefined
+	if (!override) return id
+	if (id.includes("/")) return `${id.split("/")[0]}/${override}`
+	return override
+}
+
 function random(): number {
 	return Math.random()
 }
@@ -316,19 +323,21 @@ function cruelModel<T extends LanguageModelV3>(
 	model: T,
 	options?: CruelModelOptions,
 ): T {
+	const modelId = resolveModelId(model.modelId)
 	return {
 		...model,
+		modelId,
 		doGenerate: async (params: LanguageModelV3CallOptions) => {
-			await applyChaos(options, model.modelId)
+			await applyChaos(options, modelId)
 			const result = await model.doGenerate(params)
-			return applyPostChaos(result, options, model.modelId)
+			return applyPostChaos(result, options, modelId)
 		},
 		doStream: async (params: LanguageModelV3CallOptions) => {
-			await applyChaos(options, model.modelId)
+			await applyChaos(options, modelId)
 			const result = await model.doStream(params)
 			return {
 				...result,
-				stream: applyStreamChaos(result.stream, options, model.modelId),
+				stream: applyStreamChaos(result.stream, options, modelId),
 			}
 		},
 	} as T
@@ -338,10 +347,12 @@ function cruelEmbeddingModel<T extends EmbeddingModelV3>(
 	model: T,
 	options?: CruelEmbeddingOptions,
 ): T {
+	const modelId = resolveModelId(model.modelId)
 	return {
 		...model,
+		modelId,
 		doEmbed: async (params: EmbeddingModelV3CallOptions) => {
-			await applyChaos(options, model.modelId)
+			await applyChaos(options, modelId)
 			return model.doEmbed(params)
 		},
 	} as T
@@ -351,10 +362,12 @@ function cruelImageModel<T extends ImageModelV3>(
 	model: T,
 	options?: CruelImageOptions,
 ): T {
+	const modelId = resolveModelId(model.modelId)
 	return {
 		...model,
+		modelId,
 		doGenerate: async (params: ImageModelV3CallOptions) => {
-			await applyChaos(options, model.modelId)
+			await applyChaos(options, modelId)
 			return model.doGenerate(params)
 		},
 	} as T
@@ -364,10 +377,12 @@ function cruelSpeechModel<T extends SpeechModelV3>(
 	model: T,
 	options?: CruelSpeechOptions,
 ): T {
+	const modelId = resolveModelId(model.modelId)
 	return {
 		...model,
+		modelId,
 		doGenerate: async (params: SpeechModelV3CallOptions) => {
-			await applyChaos(options, model.modelId)
+			await applyChaos(options, modelId)
 			return model.doGenerate(params)
 		},
 	} as T
@@ -377,10 +392,12 @@ function cruelTranscriptionModel<T extends TranscriptionModelV3>(
 	model: T,
 	options?: CruelTranscriptionOptions,
 ): T {
+	const modelId = resolveModelId(model.modelId)
 	return {
 		...model,
+		modelId,
 		doGenerate: async (params: TranscriptionModelV3CallOptions) => {
-			await applyChaos(options, model.modelId)
+			await applyChaos(options, modelId)
 			return model.doGenerate(params)
 		},
 	} as T
@@ -390,10 +407,12 @@ function cruelVideoModel<T extends VideoModelV3>(
 	model: T,
 	options?: CruelVideoOptions,
 ): T {
+	const modelId = resolveModelId(model.modelId)
 	return {
 		...model,
+		modelId,
 		doGenerate: async (params: VideoModelV3CallOptions) => {
-			await applyChaos(options, model.modelId)
+			await applyChaos(options, modelId)
 			return model.doGenerate(params)
 		},
 	} as T
