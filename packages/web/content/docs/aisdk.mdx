@@ -46,6 +46,19 @@ import { cruelModel, presets } from "cruel/ai-sdk"
 const model = cruelModel(openai("gpt-4o"), presets.realistic)
 ```
 
+## model override for tests
+
+set `MODEL` to swap model ids without editing code:
+
+```bash
+MODEL=gpt-6 bun run your-script.ts
+```
+
+this works for ids with and without a provider prefix:
+
+- `gpt-4o` -> `gpt-6`
+- `openai/gpt-4o` -> `openai/gpt-6`
+
 ## streaming with chaos
 
 ```ts
@@ -152,4 +165,3 @@ const model = cruelImageModel(openai.image("dall-e-3"), {
 
 const { images } = await generateImage({ model, prompt: "a cat" })
 ```
-

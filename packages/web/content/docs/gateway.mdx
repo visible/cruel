@@ -37,6 +37,17 @@ cruelModel(gateway("xai/grok-3-fast"), opts)
 cruelModel(gateway("deepseek/deepseek-chat"), opts)
 ```
 
+## model override for tests
+
+`MODEL` can swap only the model segment while preserving the gateway provider prefix:
+
+```bash
+MODEL=gpt-6 bun run your-script.ts
+```
+
+- `openai/gpt-4o` -> `openai/gpt-6`
+- `anthropic/claude-sonnet-4-5-20250929` -> `anthropic/gpt-6`
+
 ## streaming
 
 ```ts
