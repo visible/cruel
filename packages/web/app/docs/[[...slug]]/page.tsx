@@ -1,8 +1,8 @@
-import { source } from "@/lib/source"
-import { DocsPage, DocsBody } from "fumadocs-ui/page"
-import { notFound } from "next/navigation"
 import defaultMdxComponents from "fumadocs-ui/mdx"
+import { DocsBody, DocsPage } from "fumadocs-ui/page"
 import type { MDXContent } from "mdx/types"
+import { notFound } from "next/navigation"
+import { source } from "@/lib/source"
 
 export default async function Page(props: { params: Promise<{ slug?: string[] }> }) {
 	const params = await props.params

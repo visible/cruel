@@ -6,24 +6,24 @@ import { print } from "../../../lib/print"
 import { run } from "../../../lib/run"
 
 run(async () => {
-  const model = cruelEmbeddingModel(gateway.embeddingModel("openai/text-embedding-3-small"), {
-    rateLimit: 0.15,
-    delay: [100, 500],
-    onChaos: log,
-  })
+	const model = cruelEmbeddingModel(gateway.embeddingModel("openai/text-embedding-3-small"), {
+		rateLimit: 0.15,
+		delay: [100, 500],
+		onChaos: log,
+	})
 
-  const { embeddings, usage } = await embedMany({
-    model,
-    values: [
-      "rate limiting in distributed systems",
-      "circuit breaker pattern",
-      "chaos engineering principles",
-      "fault injection testing",
-      "resilience patterns for microservices",
-    ],
-  })
+	const { embeddings, usage } = await embedMany({
+		model,
+		values: [
+			"rate limiting in distributed systems",
+			"circuit breaker pattern",
+			"chaos engineering principles",
+			"fault injection testing",
+			"resilience patterns for microservices",
+		],
+	})
 
-  print("count:", embeddings.length)
-  print("dimensions:", embeddings[0].length)
-  print("usage:", usage)
+	print("count:", embeddings.length)
+	print("dimensions:", embeddings[0].length)
+	print("usage:", usage)
 })

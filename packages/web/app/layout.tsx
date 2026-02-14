@@ -1,6 +1,6 @@
-import type { Metadata } from "next"
-import { GeistMono } from "geist/font/mono"
 import { RootProvider } from "fumadocs-ui/provider/next"
+import { GeistMono } from "geist/font/mono"
+import type { Metadata } from "next"
 import "./globals.css"
 
 export const metadata: Metadata = {

@@ -31,9 +31,7 @@ run(async () => {
 				print(`[${i + 1}] ${id}:`, result.text.slice(0, 40))
 				succeeded = true
 				break
-			} catch {
-				continue
-			}
+			} catch {}
 		}
 		if (!succeeded) {
 			print(`[${i + 1}]`, "all providers failed")

@@ -1,7 +1,9 @@
 {
 	"name": "cruel-workspace",
 	"private": true,
-	"workspaces": ["packages/*"],
+	"workspaces": [
+		"packages/*"
+	],
 	"scripts": {
 		"build": "bun run --filter cruel build",
 		"build:web": "bun run --filter @cruel/web build",

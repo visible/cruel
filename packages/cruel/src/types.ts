@@ -12,13 +12,7 @@ type SharedV3Warning =
 	| { type: "other"; message: string }
 
 type LanguageModelV3FinishReason = {
-	unified:
-		| "stop"
-		| "length"
-		| "content-filter"
-		| "tool-calls"
-		| "error"
-		| "other"
+	unified: "stop" | "length" | "content-filter" | "tool-calls" | "error" | "other"
 	raw: string | undefined
 }
 
@@ -162,7 +156,12 @@ type LanguageModelV3CallOptions = {
 type LanguageModelV3Content =
 	| { type: "text"; text: string; providerMetadata?: SharedV3ProviderMetadata }
 	| { type: "reasoning"; text: string; providerMetadata?: SharedV3ProviderMetadata }
-	| { type: "file"; mediaType: string; data: string | Uint8Array; providerMetadata?: SharedV3ProviderMetadata }
+	| {
+			type: "file"
+			mediaType: string
+			data: string | Uint8Array
+			providerMetadata?: SharedV3ProviderMetadata
+	  }
 	| {
 			type: "tool-call"
 			toolCallId: string
@@ -230,7 +229,12 @@ type LanguageModelV3StreamPart =
 	| { type: "text-delta"; id: string; delta: string; providerMetadata?: SharedV3ProviderMetadata }
 	| { type: "text-end"; id: string; providerMetadata?: SharedV3ProviderMetadata }
 	| { type: "reasoning-start"; id: string; providerMetadata?: SharedV3ProviderMetadata }
-	| { type: "reasoning-delta"; id: string; delta: string; providerMetadata?: SharedV3ProviderMetadata }
+	| {
+			type: "reasoning-delta"
+			id: string
+			delta: string
+			providerMetadata?: SharedV3ProviderMetadata
+	  }
 	| { type: "reasoning-end"; id: string; providerMetadata?: SharedV3ProviderMetadata }
 	| {
 			type: "tool-input-start"
@@ -241,7 +245,12 @@ type LanguageModelV3StreamPart =
 			dynamic?: boolean
 			title?: string
 	  }
-	| { type: "tool-input-delta"; id: string; delta: string; providerMetadata?: SharedV3ProviderMetadata }
+	| {
+			type: "tool-input-delta"
+			id: string
+			delta: string
+			providerMetadata?: SharedV3ProviderMetadata
+	  }
 	| { type: "tool-input-end"; id: string; providerMetadata?: SharedV3ProviderMetadata }
 	| {
 			type: "tool-approval-request"
@@ -268,7 +277,12 @@ type LanguageModelV3StreamPart =
 			dynamic?: boolean
 			providerMetadata?: SharedV3ProviderMetadata
 	  }
-	| { type: "file"; mediaType: string; data: string | Uint8Array; providerMetadata?: SharedV3ProviderMetadata }
+	| {
+			type: "file"
+			mediaType: string
+			data: string | Uint8Array
+			providerMetadata?: SharedV3ProviderMetadata
+	  }
 	| {
 			type: "source"
 			sourceType: "url"
@@ -307,15 +321,9 @@ type LanguageModelV3 = {
 	readonly specificationVersion: "v3"
 	readonly provider: string
 	readonly modelId: string
-	supportedUrls:
-		| PromiseLike<Record<string, RegExp[]>>
-		| Record<string, RegExp[]>
-	doGenerate(
-		options: LanguageModelV3CallOptions,
-	): PromiseLike<LanguageModelV3GenerateResult>
-	doStream(
-		options: LanguageModelV3CallOptions,
-	): PromiseLike<LanguageModelV3StreamResult>
+	supportedUrls: PromiseLike<Record<string, RegExp[]>> | Record<string, RegExp[]>
+	doGenerate(options: LanguageModelV3CallOptions): PromiseLike<LanguageModelV3GenerateResult>
+	doStream(options: LanguageModelV3CallOptions): PromiseLike<LanguageModelV3StreamResult>
 }
 
 type LanguageModelV3Middleware = {
@@ -365,18 +373,18 @@ type EmbeddingModelV3 = {
 	readonly specificationVersion: "v3"
 	readonly provider: string
 	readonly modelId: string
-	readonly maxEmbeddingsPerCall:
-		| PromiseLike<number | undefined>
-		| number
-		| undefined
+	readonly maxEmbeddingsPerCall: PromiseLike<number | undefined> | number | undefined
 	readonly supportsParallelCalls: PromiseLike<boolean> | boolean
-	doEmbed(
-		options: EmbeddingModelV3CallOptions,
-	): PromiseLike<EmbeddingModelV3Result>
+	doEmbed(options: EmbeddingModelV3CallOptions): PromiseLike<EmbeddingModelV3Result>
 }
 
 type ImageModelV3File =
-	| { type: "file"; mediaType: string; data: string | Uint8Array; providerOptions?: SharedV3ProviderMetadata }
+	| {
+			type: "file"
+			mediaType: string
+			data: string | Uint8Array
+			providerOptions?: SharedV3ProviderMetadata
+	  }
 	| { type: "url"; url: string; providerOptions?: SharedV3ProviderMetadata }
 
 type ImageModelV3CallOptions = {
@@ -397,7 +405,11 @@ type ImageModelV3Result = {
 	warnings: Array<SharedV3Warning>
 	providerMetadata?: Record<string, { images: JSONArray } & JSONValue>
 	response: { timestamp: Date; modelId: string; headers: Record<string, string> | undefined }
-	usage?: { inputTokens: number | undefined; outputTokens: number | undefined; totalTokens: number | undefined }
+	usage?: {
+		inputTokens: number | undefined
+		outputTokens: number | undefined
+		totalTokens: number | undefined
+	}
 }
 
 type ImageModelV3 = {
@@ -471,13 +483,16 @@ type TranscriptionModelV3 = {
 	readonly specificationVersion: "v3"
 	readonly provider: string
 	readonly modelId: string
-	doGenerate(
-		options: TranscriptionModelV3CallOptions,
-	): PromiseLike<TranscriptionModelV3Result>
+	doGenerate(options: TranscriptionModelV3CallOptions): PromiseLike<TranscriptionModelV3Result>
 }
 
 type VideoModelV3File =
-	| { type: "file"; mediaType: string; data: string | Uint8Array; providerOptions?: SharedV3ProviderMetadata }
+	| {
+			type: "file"
+			mediaType: string
+			data: string | Uint8Array
+			providerOptions?: SharedV3ProviderMetadata
+	  }
 	| { type: "url"; url: string; providerOptions?: SharedV3ProviderMetadata }
 
 type VideoModelV3CallOptions = {

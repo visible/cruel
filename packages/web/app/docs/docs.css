@@ -29,7 +29,8 @@
 	-webkit-mask-image: none !important;
 }
 
-.docs-panel .mask-\[linear-gradient\(to_bottom\,transparent\,white_16px\,white_calc\(100\%-16px\)\,transparent\)\] {
+.docs-panel
+	.mask-\[linear-gradient\(to_bottom\,transparent\,white_16px\,white_calc\(100\%-16px\)\,transparent\)\] {
 	mask: none !important;
 	-webkit-mask: none !important;
 }

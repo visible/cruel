@@ -737,14 +737,15 @@ describe("CruelAPIError", () => {
 })
 
 const MOCK_EMBED_RESULT: EmbeddingModelV3Result = {
-	embeddings: [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]],
+	embeddings: [
+		[0.1, 0.2, 0.3],
+		[0.4, 0.5, 0.6],
+	],
 	usage: { tokens: 10 },
 	warnings: [],
 }
 
-function createMockEmbeddingModel(
-	overrides?: Partial<EmbeddingModelV3>,
-): EmbeddingModelV3 {
+function createMockEmbeddingModel(overrides?: Partial<EmbeddingModelV3>): EmbeddingModelV3 {
 	return {
 		specificationVersion: "v3",
 		provider: "test",
@@ -761,7 +762,10 @@ describe("cruelEmbeddingModel", () => {
 		const model = createMockEmbeddingModel()
 		const wrapped = cruelEmbeddingModel(model)
 		const result = await wrapped.doEmbed({ values: ["hello"] })
-		expect(result.embeddings).toEqual([[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]])
+		expect(result.embeddings).toEqual([
+			[0.1, 0.2, 0.3],
+			[0.4, 0.5, 0.6],
+		])
 		expect(result.usage).toEqual({ tokens: 10 })
 	})
 
@@ -862,8 +866,14 @@ describe("cruelImageModel", () => {
 		const model = createMockImageModel()
 		const wrapped = cruelImageModel(model)
 		const result = await wrapped.doGenerate({
-			prompt: "a cat", n: 1, size: undefined, aspectRatio: undefined,
-			seed: undefined, files: undefined, mask: undefined, providerOptions: {},
+			prompt: "a cat",
+			n: 1,
+			size: undefined,
+			aspectRatio: undefined,
+			seed: undefined,
+			files: undefined,
+			mask: undefined,
+			providerOptions: {},
 		})
 		expect(result.images).toEqual(["base64data1", "base64data2"])
 	})
@@ -881,8 +891,14 @@ describe("cruelImageModel", () => {
 		const wrapped = cruelImageModel(model, { rateLimit: 1 })
 		try {
 			await wrapped.doGenerate({
-				prompt: "a cat", n: 1, size: undefined, aspectRatio: undefined,
-				seed: undefined, files: undefined, mask: undefined, providerOptions: {},
+				prompt: "a cat",
+				n: 1,
+				size: undefined,
+				aspectRatio: undefined,
+				seed: undefined,
+				files: undefined,
+				mask: undefined,
+				providerOptions: {},
 			})
 			expect(true).toBe(false)
 		} catch (e) {
@@ -894,8 +910,14 @@ describe("cruelImageModel", () => {
 		const model = createMockImageModel()
 		const wrapped = cruelImageModel(model, { rateLimit: 0 })
 		const result = await wrapped.doGenerate({
-			prompt: "a cat", n: 1, size: undefined, aspectRatio: undefined,
-			seed: undefined, files: undefined, mask: undefined, providerOptions: {},
+			prompt: "a cat",
+			n: 1,
+			size: undefined,
+			aspectRatio: undefined,
+			seed: undefined,
+			files: undefined,
+			mask: undefined,
+			providerOptions: {},
 		})
 		expect(result.images).toHaveLength(2)
 	})
@@ -950,7 +972,12 @@ const MOCK_TRANSCRIPTION_RESULT: TranscriptionModelV3Result = {
 	language: "en",
 	durationInSeconds: 1.5,
 	warnings: [],
-	response: { timestamp: new Date(), modelId: "test-transcription", headers: undefined, body: undefined },
+	response: {
+		timestamp: new Date(),
+		modelId: "test-transcription",
+		headers: undefined,
+		body: undefined,
+	},
 }
 
 function createMockTranscriptionModel(
@@ -970,7 +997,8 @@ describe("cruelTranscriptionModel", () => {
 		const model = createMockTranscriptionModel()
 		const wrapped = cruelTranscriptionModel(model)
 		const result = await wrapped.doGenerate({
-			audio: new Uint8Array([1, 2, 3]), mediaType: "audio/mp3",
+			audio: new Uint8Array([1, 2, 3]),
+			mediaType: "audio/mp3",
 		})
 		expect(result.text).toBe("hello world")
 		expect(result.segments).toHaveLength(1)
@@ -981,7 +1009,8 @@ describe("cruelTranscriptionModel", () => {
 		const wrapped = cruelTranscriptionModel(model, { rateLimit: 1 })
 		try {
 			await wrapped.doGenerate({
-				audio: new Uint8Array([1, 2, 3]), mediaType: "audio/mp3",
+				audio: new Uint8Array([1, 2, 3]),
+				mediaType: "audio/mp3",
 			})
 			expect(true).toBe(false)
 		} catch (e) {
@@ -993,7 +1022,8 @@ describe("cruelTranscriptionModel", () => {
 		const model = createMockTranscriptionModel()
 		const wrapped = cruelTranscriptionModel(model, { rateLimit: 0 })
 		const result = await wrapped.doGenerate({
-			audio: new Uint8Array([1, 2, 3]), mediaType: "audio/mp3",
+			audio: new Uint8Array([1, 2, 3]),
+			mediaType: "audio/mp3",
 		})
 		expect(result.text).toBe("hello world")
 	})
@@ -1021,9 +1051,15 @@ describe("cruelVideoModel", () => {
 		const model = createMockVideoModel()
 		const wrapped = cruelVideoModel(model)
 		const result = await wrapped.doGenerate({
-			prompt: "a cat walking", n: 1, aspectRatio: undefined,
-			resolution: undefined, duration: undefined, fps: undefined,
-			seed: undefined, image: undefined, providerOptions: {},
+			prompt: "a cat walking",
+			n: 1,
+			aspectRatio: undefined,
+			resolution: undefined,
+			duration: undefined,
+			fps: undefined,
+			seed: undefined,
+			image: undefined,
+			providerOptions: {},
 		})
 		expect(result.videos).toHaveLength(1)
 		expect(result.videos[0].type).toBe("url")
@@ -1042,9 +1078,15 @@ describe("cruelVideoModel", () => {
 		const wrapped = cruelVideoModel(model, { rateLimit: 1 })
 		try {
 			await wrapped.doGenerate({
-				prompt: "a cat walking", n: 1, aspectRatio: undefined,
-				resolution: undefined, duration: undefined, fps: undefined,
-				seed: undefined, image: undefined, providerOptions: {},
+				prompt: "a cat walking",
+				n: 1,
+				aspectRatio: undefined,
+				resolution: undefined,
+				duration: undefined,
+				fps: undefined,
+				seed: undefined,
+				image: undefined,
+				providerOptions: {},
 			})
 			expect(true).toBe(false)
 		} catch (e) {
@@ -1056,9 +1098,15 @@ describe("cruelVideoModel", () => {
 		const model = createMockVideoModel()
 		const wrapped = cruelVideoModel(model, { rateLimit: 0 })
 		const result = await wrapped.doGenerate({
-			prompt: "a cat walking", n: 1, aspectRatio: undefined,
-			resolution: undefined, duration: undefined, fps: undefined,
-			seed: undefined, image: undefined, providerOptions: {},
+			prompt: "a cat walking",
+			n: 1,
+			aspectRatio: undefined,
+			resolution: undefined,
+			duration: undefined,
+			fps: undefined,
+			seed: undefined,
+			image: undefined,
+			providerOptions: {},
 		})
 		expect(result.videos).toHaveLength(1)
 	})
@@ -1094,63 +1142,81 @@ describe("onChaos", () => {
 		test("rateLimit", async () => {
 			const { events, onChaos } = collect()
 			const wrapped = cruelModel(createMockModel(), { rateLimit: 1, onChaos })
-			try { await wrapped.doGenerate(TEST_PARAMS) } catch {}
+			try {
+				await wrapped.doGenerate(TEST_PARAMS)
+			} catch {}
 			expect(events).toEqual([{ type: "rateLimit", modelId: "test-model" }])
 		})
 
 		test("overloaded", async () => {
 			const { events, onChaos } = collect()
 			const wrapped = cruelModel(createMockModel(), { overloaded: 1, onChaos })
-			try { await wrapped.doGenerate(TEST_PARAMS) } catch {}
+			try {
+				await wrapped.doGenerate(TEST_PARAMS)
+			} catch {}
 			expect(events).toEqual([{ type: "overloaded", modelId: "test-model" }])
 		})
 
 		test("contextLength", async () => {
 			const { events, onChaos } = collect()
 			const wrapped = cruelModel(createMockModel(), { contextLength: 1, onChaos })
-			try { await wrapped.doGenerate(TEST_PARAMS) } catch {}
+			try {
+				await wrapped.doGenerate(TEST_PARAMS)
+			} catch {}
 			expect(events).toEqual([{ type: "contextLength", modelId: "test-model" }])
 		})
 
 		test("contentFilter", async () => {
 			const { events, onChaos } = collect()
 			const wrapped = cruelModel(createMockModel(), { contentFilter: 1, onChaos })
-			try { await wrapped.doGenerate(TEST_PARAMS) } catch {}
+			try {
+				await wrapped.doGenerate(TEST_PARAMS)
+			} catch {}
 			expect(events).toEqual([{ type: "contentFilter", modelId: "test-model" }])
 		})
 
 		test("modelUnavailable", async () => {
 			const { events, onChaos } = collect()
 			const wrapped = cruelModel(createMockModel(), { modelUnavailable: 1, onChaos })
-			try { await wrapped.doGenerate(TEST_PARAMS) } catch {}
+			try {
+				await wrapped.doGenerate(TEST_PARAMS)
+			} catch {}
 			expect(events).toEqual([{ type: "modelUnavailable", modelId: "test-model" }])
 		})
 
 		test("invalidApiKey", async () => {
 			const { events, onChaos } = collect()
 			const wrapped = cruelModel(createMockModel(), { invalidApiKey: 1, onChaos })
-			try { await wrapped.doGenerate(TEST_PARAMS) } catch {}
+			try {
+				await wrapped.doGenerate(TEST_PARAMS)
+			} catch {}
 			expect(events).toEqual([{ type: "invalidApiKey", modelId: "test-model" }])
 		})
 
 		test("quotaExceeded", async () => {
 			const { events, onChaos } = collect()
 			const wrapped = cruelModel(createMockModel(), { quotaExceeded: 1, onChaos })
-			try { await wrapped.doGenerate(TEST_PARAMS) } catch {}
+			try {
+				await wrapped.doGenerate(TEST_PARAMS)
+			} catch {}
 			expect(events).toEqual([{ type: "quotaExceeded", modelId: "test-model" }])
 		})
 
 		test("emptyResponse", async () => {
 			const { events, onChaos } = collect()
 			const wrapped = cruelModel(createMockModel(), { emptyResponse: 1, onChaos })
-			try { await wrapped.doGenerate(TEST_PARAMS) } catch {}
+			try {
+				await wrapped.doGenerate(TEST_PARAMS)
+			} catch {}
 			expect(events).toEqual([{ type: "emptyResponse", modelId: "test-model" }])
 		})
 
 		test("fail", async () => {
 			const { events, onChaos } = collect()
 			const wrapped = cruelModel(createMockModel(), { fail: 1, onChaos })
-			try { await wrapped.doGenerate(TEST_PARAMS) } catch {}
+			try {
+				await wrapped.doGenerate(TEST_PARAMS)
+			} catch {}
 			expect(events).toEqual([{ type: "fail", modelId: "test-model" }])
 		})
 
@@ -1181,7 +1247,9 @@ describe("onChaos", () => {
 			const { events, onChaos } = collect()
 			const wrapped = cruelModel(createMockModel(), { streamCut: 1, onChaos })
 			const result = await wrapped.doStream(TEST_PARAMS)
-			try { await collectStream(result.stream) } catch {}
+			try {
+				await collectStream(result.stream)
+			} catch {}
 			expect(events.some((e) => e.type === "streamCut")).toBe(true)
 			expect(events.find((e) => e.type === "streamCut")).toEqual({
 				type: "streamCut",
@@ -1231,7 +1299,9 @@ describe("onChaos", () => {
 				execute: async (input: string) => `result: ${input}`,
 			}
 			const wrapped = cruelTool(tool, { toolFailure: 1, onChaos })
-			try { await wrapped.execute("hello") } catch {}
+			try {
+				await wrapped.execute("hello")
+			} catch {}
 			expect(events).toEqual([{ type: "toolFailure" }])
 		})
 	})
@@ -1243,7 +1313,9 @@ describe("onChaos", () => {
 				rateLimit: 1,
 				onChaos,
 			})
-			try { await wrapped.doEmbed({ values: ["hello"] }) } catch {}
+			try {
+				await wrapped.doEmbed({ values: ["hello"] })
+			} catch {}
 			expect(events).toEqual([{ type: "rateLimit", modelId: "test-embedding" }])
 		})
 	})
@@ -1283,7 +1355,9 @@ describe("onChaos", () => {
 				params: TEST_PARAMS,
 				model,
 			})
-			try { await collectStream(result.stream) } catch {}
+			try {
+				await collectStream(result.stream)
+			} catch {}
 			expect(events.some((e) => e.type === "streamCut")).toBe(true)
 		})
 	})

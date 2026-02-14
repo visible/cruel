@@ -1,7 +1,7 @@
+import { spawn } from "node:child_process"
 import { readdirSync, statSync } from "node:fs"
 import { join, relative } from "node:path"
-import { spawn } from "node:child_process"
-import { dim, cyan, green, red, reset } from "./lib/colors"
+import { cyan, dim, green, red, reset } from "./lib/colors"
 
 const root = import.meta.dirname
 const args = process.argv.slice(2)
@@ -65,7 +65,9 @@ if (matches.length === 0) {
 }
 
 const modelTag = model ? ` ${dim}(model: ${model})${reset}` : ""
-console.log(`\n  ${cyan}\u25b8${reset} ${matches.length} examples matching "${filters.join(" ")}"${modelTag}\n`)
+console.log(
+	`\n  ${cyan}\u25b8${reset} ${matches.length} examples matching "${filters.join(" ")}"${modelTag}\n`,
+)
 
 for (const file of matches) {
 	const rel = relative(root, file)

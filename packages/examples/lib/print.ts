@@ -1,4 +1,4 @@
-import { dim, cyan, reset } from "./colors"
+import { cyan, dim, reset } from "./colors"
 
 function clean(value: unknown): unknown {
 	if (value == null || typeof value !== "object") return value

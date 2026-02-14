@@ -32,8 +32,8 @@ export default function Page() {
 									cruel
 								</h1>
 								<p className="text-[13px] leading-[1.55] text-white/35 max-w-[260px] mt-1">
-									inject failures, latency, and timeouts into any async function.
-									works with fetch, ai sdks, databases, anything.
+									inject failures, latency, and timeouts into any async function. works with fetch,
+									ai sdks, databases, anything.
 								</p>
 							</div>
 

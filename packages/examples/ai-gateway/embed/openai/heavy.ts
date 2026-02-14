@@ -16,7 +16,7 @@ run(async () => {
 
 	for (let i = 0; i < 10; i++) {
 		try {
-			const { embeddings, usage } = await embedMany({
+			const { embeddings } = await embedMany({
 				model,
 				values: [`batch ${i + 1} a`, `batch ${i + 1} b`, `batch ${i + 1} c`],
 			})

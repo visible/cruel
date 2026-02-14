@@ -20,11 +20,7 @@ run(async () => {
 		try {
 			const { embeddings, usage } = await embedMany({
 				model,
-				values: [
-					`batch ${i + 1} item a`,
-					`batch ${i + 1} item b`,
-					`batch ${i + 1} item c`,
-				],
+				values: [`batch ${i + 1} item a`, `batch ${i + 1} item b`, `batch ${i + 1} item c`],
 			})
 			print(`[${i + 1}] ok:`, `${embeddings.length} embeddings, ${embeddings[0].length} dims`)
 			print(`[${i + 1}] usage:`, usage)

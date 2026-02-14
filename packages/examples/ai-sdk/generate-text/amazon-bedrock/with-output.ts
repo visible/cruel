@@ -1,5 +1,5 @@
 import { bedrock } from "@ai-sdk/amazon-bedrock"
-import { Output, generateText } from "ai"
+import { generateText, Output } from "ai"
 import { cruelModel } from "cruel/ai-sdk"
 import { z } from "zod"
 import { log } from "../../../lib/chaos"

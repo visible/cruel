@@ -6,27 +6,27 @@ import { print } from "../../../lib/print"
 import { run } from "../../../lib/run"
 
 run(async () => {
-  const model = cruelModel(openai("gpt-4o"), {
-    slowTokens: [20, 100],
-    streamCut: 0.1,
-    corruptChunks: 0.05,
-    onChaos: log,
-  })
+	const model = cruelModel(openai("gpt-4o"), {
+		slowTokens: [20, 100],
+		streamCut: 0.1,
+		corruptChunks: 0.05,
+		onChaos: log,
+	})
 
-  const result = streamText({
-    model,
-    prompt: "Write a short story about a robot learning to cook.",
-  })
+	const result = streamText({
+		model,
+		prompt: "Write a short story about a robot learning to cook.",
+	})
 
-  for await (const chunk of result.fullStream) {
-    if (chunk.type === "text-delta") {
-      process.stdout.write(chunk.text)
-    }
-    if (chunk.type === "error") {
-      console.error("\nstream error:", chunk.error)
-    }
-  }
+	for await (const chunk of result.fullStream) {
+		if (chunk.type === "text-delta") {
+			process.stdout.write(chunk.text)
+		}
+		if (chunk.type === "error") {
+			console.error("\nstream error:", chunk.error)
+		}
+	}
 
-  console.log()
-  print("usage:", await result.usage)
+	console.log()
+	print("usage:", await result.usage)
 })

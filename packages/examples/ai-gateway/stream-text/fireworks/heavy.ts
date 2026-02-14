@@ -5,17 +5,20 @@ import { log } from "../../../lib/chaos"
 import { run } from "../../../lib/run"
 
 run(async () => {
-	const model = cruelModel(gateway("fireworks/accounts/fireworks/models/llama-v3p1-405b-instruct"), {
-		rateLimit: 0.3,
-		overloaded: 0.15,
-		delay: [500, 2000],
-		slowTokens: [100, 500],
-		streamCut: 0.2,
-		corruptChunks: 0.1,
-		partialResponse: 0.15,
-		fail: 0.1,
-		onChaos: log,
-	})
+	const model = cruelModel(
+		gateway("fireworks/accounts/fireworks/models/llama-v3p1-405b-instruct"),
+		{
+			rateLimit: 0.3,
+			overloaded: 0.15,
+			delay: [500, 2000],
+			slowTokens: [100, 500],
+			streamCut: 0.2,
+			corruptChunks: 0.1,
+			partialResponse: 0.15,
+			fail: 0.1,
+			onChaos: log,
+		},
+	)
 
 	for (let i = 0; i < 10; i++) {
 		console.log(`\n--- stream ${i + 1} ---`)

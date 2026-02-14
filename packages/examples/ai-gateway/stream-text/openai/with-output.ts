@@ -7,29 +7,29 @@ import { print } from "../../../lib/print"
 import { run } from "../../../lib/run"
 
 run(async () => {
-  const model = cruelModel(gateway("anthropic/claude-sonnet-4-5-20250929"), {
-    slowTokens: [30, 100],
-    partialResponse: 0.2,
-    onChaos: log,
-  })
+	const model = cruelModel(gateway("anthropic/claude-sonnet-4-5-20250929"), {
+		slowTokens: [30, 100],
+		partialResponse: 0.2,
+		onChaos: log,
+	})
 
-  const result = streamText({
-    model,
-    output: Output.object({
-      schema: z.object({
-        title: z.string(),
-        summary: z.string(),
-        rating: z.number(),
-        tags: z.array(z.string()),
-      }),
-    }),
-    prompt: "Review the book Dune.",
-  })
+	const result = streamText({
+		model,
+		output: Output.object({
+			schema: z.object({
+				title: z.string(),
+				summary: z.string(),
+				rating: z.number(),
+				tags: z.array(z.string()),
+			}),
+		}),
+		prompt: "Review the book Dune.",
+	})
 
-  for await (const partial of result.partialOutputStream) {
-    console.clear()
-    print("partial:", partial)
-  }
+	for await (const partial of result.partialOutputStream) {
+		console.clear()
+		print("partial:", partial)
+	}
 
-  print("final:", await result.output)
+	print("final:", await result.output)
 })

@@ -6,11 +6,14 @@ import { print } from "../../../lib/print"
 import { run } from "../../../lib/run"
 
 run(async () => {
-	const model = cruelModel(gateway("fireworks/accounts/fireworks/models/llama-v3p1-405b-instruct"), {
-		slowTokens: [20, 100],
-		streamCut: 0.05,
-		onChaos: log,
-	})
+	const model = cruelModel(
+		gateway("fireworks/accounts/fireworks/models/llama-v3p1-405b-instruct"),
+		{
+			slowTokens: [20, 100],
+			streamCut: 0.05,
+			onChaos: log,
+		},
+	)
 
 	const result = streamText({
 		model,

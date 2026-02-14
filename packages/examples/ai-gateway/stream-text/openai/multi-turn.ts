@@ -14,11 +14,7 @@ run(async () => {
 	})
 
 	const messages: Array<{ role: "user" | "assistant"; content: string }> = []
-	const prompts = [
-		"My name is Alex.",
-		"What is my name?",
-		"Now spell it backwards.",
-	]
+	const prompts = ["My name is Alex.", "What is my name?", "Now spell it backwards."]
 
 	for (const prompt of prompts) {
 		messages.push({ role: "user", content: prompt })

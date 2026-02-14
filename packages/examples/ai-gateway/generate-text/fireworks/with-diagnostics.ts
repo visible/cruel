@@ -6,19 +6,22 @@ import { run } from "../../../lib/run"
 
 run(async () => {
 	const ctx = diag.context()
-	const model = cruelModel(gateway("fireworks/accounts/fireworks/models/llama-v3p1-405b-instruct"), {
-		rateLimit: 0.3,
-		overloaded: 0.15,
-		contextLength: 0.05,
-		contentFilter: 0.05,
-		modelUnavailable: 0.1,
-		emptyResponse: 0.05,
-		partialResponse: 0.2,
-		delay: [200, 1500],
-		fail: 0.1,
-		timeout: 0.02,
-		onChaos: diag.tracker(ctx),
-	})
+	const model = cruelModel(
+		gateway("fireworks/accounts/fireworks/models/llama-v3p1-405b-instruct"),
+		{
+			rateLimit: 0.3,
+			overloaded: 0.15,
+			contextLength: 0.05,
+			contentFilter: 0.05,
+			modelUnavailable: 0.1,
+			emptyResponse: 0.05,
+			partialResponse: 0.2,
+			delay: [200, 1500],
+			fail: 0.1,
+			timeout: 0.02,
+			onChaos: diag.tracker(ctx),
+		},
+	)
 
 	for (let i = 1; i <= 15; i++) {
 		diag.before(ctx, i)

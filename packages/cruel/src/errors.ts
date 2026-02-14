@@ -2,8 +2,8 @@ const baseMarker = Symbol.for("vercel.ai.error")
 const apiCallMarker = Symbol.for("vercel.ai.error.AI_APICallError")
 
 class CruelAPIError extends Error {
-	readonly [baseMarker] = true;
-	readonly [apiCallMarker] = true;
+	readonly [baseMarker] = true
+	readonly [apiCallMarker] = true
 	readonly statusCode: number
 	readonly isRetryable: boolean
 	readonly url: string

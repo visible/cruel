@@ -1,6 +1,6 @@
 import { APICallError } from "ai"
 import type { ChaosEvent } from "cruel/ai-sdk"
-import { dim, bold, red, green, yellow, cyan, magenta, reset } from "./colors"
+import { bold, cyan, dim, green, magenta, red, reset, yellow } from "./colors"
 
 type Entry = ChaosEvent & { ts: number; req: number }
 type Req = {
@@ -49,7 +49,9 @@ export function success(ctx: Context, i: number, ms: number, text: string) {
 	const display = text.slice(0, 55) + (truncated ? "..." : "")
 	ctx.requests.push({ i, ok: true, ms, text: display, retries, events })
 	const retryTag = retries > 0 ? ` ${yellow}${retries} retries${reset}` : ""
-	console.log(`  ${green}\u2713${reset} ${dim}#${i}${reset} ${display} ${dim}${ms}ms${reset}${retryTag}`)
+	console.log(
+		`  ${green}\u2713${reset} ${dim}#${i}${reset} ${display} ${dim}${ms}ms${reset}${retryTag}`,
+	)
 }
 
 export function failure(ctx: Context, i: number, ms: number, error: unknown) {
@@ -66,7 +68,9 @@ export function failure(ctx: Context, i: number, ms: number, error: unknown) {
 	ctx.requests.push(req)
 	const statusTag = req.status ? ` ${dim}${req.status}${reset}` : ""
 	const retryTag = retries > 1 ? ` ${dim}${retries} attempts${reset}` : ""
-	console.log(`  ${red}\u2717${reset} ${dim}#${i}${reset} ${red}${err.message}${reset}${statusTag}${retryTag}`)
+	console.log(
+		`  ${red}\u2717${reset} ${dim}#${i}${reset} ${red}${err.message}${reset}${statusTag}${retryTag}`,
+	)
 }
 
 export function report(ctx: Context) {
@@ -76,7 +80,7 @@ export function report(ctx: Context) {
 	const successTimes = succeeded.map((r) => r.ms)
 	const failTimes = failed.map((r) => r.ms)
 
-	const avg = (a: number[]) => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : 0
+	const avg = (a: number[]) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : 0)
 	const percentile = (a: number[], p: number) => {
 		if (!a.length) return 0
 		const s = [...a].sort((x, y) => x - y)
@@ -90,24 +94,37 @@ export function report(ctx: Context) {
 	console.log(`\n  ${cyan}${bold}\u2500\u2500\u2500 summary \u2500\u2500\u2500${reset}\n`)
 	console.log(`  ${dim}duration${reset}       ${total}ms`)
 	console.log(`  ${dim}requests${reset}       ${ctx.requests.length}`)
-	console.log(`  ${green}succeeded${reset}      ${succeeded.length} ${dim}(${Math.round((succeeded.length / ctx.requests.length) * 100)}%)${reset}`)
-	console.log(`  ${red}failed${reset}         ${failed.length} ${dim}(${Math.round((failed.length / ctx.requests.length) * 100)}%)${reset}`)
+	console.log(
+		`  ${green}succeeded${reset}      ${succeeded.length} ${dim}(${Math.round((succeeded.length / ctx.requests.length) * 100)}%)${reset}`,
+	)
+	console.log(
+		`  ${red}failed${reset}         ${failed.length} ${dim}(${Math.round((failed.length / ctx.requests.length) * 100)}%)${reset}`,
+	)
 
 	console.log(`\n  ${cyan}${bold}\u2500\u2500\u2500 latency \u2500\u2500\u2500${reset}\n`)
 	if (successTimes.length) {
-		console.log(`  ${green}success${reset}  ${dim}avg${reset} ${avg(successTimes)}ms  ${dim}p50${reset} ${percentile(successTimes, 0.5)}ms  ${dim}p99${reset} ${percentile(successTimes, 0.99)}ms  ${dim}min${reset} ${Math.min(...successTimes)}ms  ${dim}max${reset} ${Math.max(...successTimes)}ms`)
+		console.log(
+			`  ${green}success${reset}  ${dim}avg${reset} ${avg(successTimes)}ms  ${dim}p50${reset} ${percentile(successTimes, 0.5)}ms  ${dim}p99${reset} ${percentile(successTimes, 0.99)}ms  ${dim}min${reset} ${Math.min(...successTimes)}ms  ${dim}max${reset} ${Math.max(...successTimes)}ms`,
+		)
 	}
 	if (failTimes.length) {
-		console.log(`  ${red}failure${reset}  ${dim}avg${reset} ${avg(failTimes)}ms  ${dim}p50${reset} ${percentile(failTimes, 0.5)}ms  ${dim}p99${reset} ${percentile(failTimes, 0.99)}ms  ${dim}min${reset} ${Math.min(...failTimes)}ms  ${dim}max${reset} ${Math.max(...failTimes)}ms`)
+		console.log(
+			`  ${red}failure${reset}  ${dim}avg${reset} ${avg(failTimes)}ms  ${dim}p50${reset} ${percentile(failTimes, 0.5)}ms  ${dim}p99${reset} ${percentile(failTimes, 0.99)}ms  ${dim}min${reset} ${Math.min(...failTimes)}ms  ${dim}max${reset} ${Math.max(...failTimes)}ms`,
+		)
 	}
 
-	console.log(`\n  ${cyan}${bold}\u2500\u2500\u2500 chaos events (${ctx.events.length}) \u2500\u2500\u2500${reset}\n`)
+	console.log(
+		`\n  ${cyan}${bold}\u2500\u2500\u2500 chaos events (${ctx.events.length}) \u2500\u2500\u2500${reset}\n`,
+	)
 	for (const [type, count] of Object.entries(counts).sort((a, b) => b[1] - a[1])) {
 		const width = Math.max(1, Math.round((count / maxCount) * 20))
 		const bar = "\u2588".repeat(width)
 		const pct = Math.round((count / ctx.events.length) * 100)
-		const color = ["delay", "slowTokens", "partialResponse"].includes(type) ? yellow
-			: ["corruptChunk"].includes(type) ? magenta : red
+		const color = ["delay", "slowTokens", "partialResponse"].includes(type)
+			? yellow
+			: ["corruptChunk"].includes(type)
+				? magenta
+				: red
 		console.log(`  ${color}${bar}${reset} ${type} ${dim}${count} (${pct}%)${reset}`)
 	}
 
@@ -115,7 +132,12 @@ export function report(ctx: Context) {
 		console.log(`\n  ${cyan}${bold}\u2500\u2500\u2500 errors \u2500\u2500\u2500${reset}\n`)
 		for (const r of failed) {
 			const status = r.status ? `${dim}${r.status}${reset} ` : ""
-			const retryable = r.retryable !== undefined ? (r.retryable ? `${yellow}retryable${reset}` : `${red}fatal${reset}`) : ""
+			const retryable =
+				r.retryable !== undefined
+					? r.retryable
+						? `${yellow}retryable${reset}`
+						: `${red}fatal${reset}`
+					: ""
 			const chaos = r.events.map((e) => e.type).join(" \u2192 ")
 			console.log(`  ${dim}#${r.i}${reset} ${status}${r.error}`)
 			console.log(`     ${retryable} ${dim}${r.ms}ms${reset} ${dim}[${chaos}]${reset}`)
@@ -127,11 +149,16 @@ export function report(ctx: Context) {
 		const icon = r.ok ? `${green}\u2713${reset}` : `${red}\u2717${reset}`
 		const chaos = r.events.map((e) => {
 			const ms = "ms" in e ? `${dim}${e.ms}ms${reset}` : ""
-			const color = ["delay", "slowTokens", "partialResponse"].includes(e.type) ? yellow
-				: ["corruptChunk"].includes(e.type) ? magenta : red
+			const color = ["delay", "slowTokens", "partialResponse"].includes(e.type)
+				? yellow
+				: ["corruptChunk"].includes(e.type)
+					? magenta
+					: red
 			return `${color}${e.type}${reset}${ms ? ` ${ms}` : ""}`
 		})
 		const chaosStr = chaos.length ? chaos.join(` ${dim}\u2192${reset} `) : `${dim}clean${reset}`
-		console.log(`  ${icon} ${dim}#${r.i}${reset} ${dim}${String(r.ms).padStart(5)}ms${reset}  ${chaosStr}`)
+		console.log(
+			`  ${icon} ${dim}#${r.i}${reset} ${dim}${String(r.ms).padStart(5)}ms${reset}  ${chaosStr}`,
+		)
 	}
 }

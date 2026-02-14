@@ -7,11 +7,14 @@ import { print } from "../../../lib/print"
 import { run } from "../../../lib/run"
 
 run(async () => {
-	const model = cruelModel(gateway("fireworks/accounts/fireworks/models/llama-v3p1-405b-instruct"), {
-		rateLimit: 0.15,
-		delay: [100, 500],
-		onChaos: log,
-	})
+	const model = cruelModel(
+		gateway("fireworks/accounts/fireworks/models/llama-v3p1-405b-instruct"),
+		{
+			rateLimit: 0.15,
+			delay: [100, 500],
+			onChaos: log,
+		},
+	)
 
 	const result = await generateText({
 		model,

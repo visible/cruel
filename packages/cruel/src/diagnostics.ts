@@ -160,25 +160,38 @@ function print(ctx: DiagnosticsContext) {
 	console.log(`\n  ${cyan}${bold}\u2500\u2500\u2500 summary \u2500\u2500\u2500${reset}\n`)
 	console.log(`  ${dim}duration${reset}       ${s.duration}ms`)
 	console.log(`  ${dim}requests${reset}       ${s.total}`)
-	console.log(`  ${green}succeeded${reset}      ${s.succeeded} ${dim}(${Math.round(s.successRate * 100)}%)${reset}`)
-	console.log(`  ${red}failed${reset}         ${s.failed} ${dim}(${Math.round((1 - s.successRate) * 100)}%)${reset}`)
+	console.log(
+		`  ${green}succeeded${reset}      ${s.succeeded} ${dim}(${Math.round(s.successRate * 100)}%)${reset}`,
+	)
+	console.log(
+		`  ${red}failed${reset}         ${s.failed} ${dim}(${Math.round((1 - s.successRate) * 100)}%)${reset}`,
+	)
 
 	console.log(`\n  ${cyan}${bold}\u2500\u2500\u2500 latency \u2500\u2500\u2500${reset}\n`)
 	if (s.latency.success.avg) {
 		const l = s.latency.success
-		console.log(`  ${green}success${reset}  ${dim}avg${reset} ${l.avg}ms  ${dim}p50${reset} ${l.p50}ms  ${dim}p99${reset} ${l.p99}ms  ${dim}min${reset} ${l.min}ms  ${dim}max${reset} ${l.max}ms`)
+		console.log(
+			`  ${green}success${reset}  ${dim}avg${reset} ${l.avg}ms  ${dim}p50${reset} ${l.p50}ms  ${dim}p99${reset} ${l.p99}ms  ${dim}min${reset} ${l.min}ms  ${dim}max${reset} ${l.max}ms`,
+		)
 	}
 	if (s.latency.failure.avg) {
 		const l = s.latency.failure
-		console.log(`  ${red}failure${reset}  ${dim}avg${reset} ${l.avg}ms  ${dim}p50${reset} ${l.p50}ms  ${dim}p99${reset} ${l.p99}ms  ${dim}min${reset} ${l.min}ms  ${dim}max${reset} ${l.max}ms`)
+		console.log(
+			`  ${red}failure${reset}  ${dim}avg${reset} ${l.avg}ms  ${dim}p50${reset} ${l.p50}ms  ${dim}p99${reset} ${l.p99}ms  ${dim}min${reset} ${l.min}ms  ${dim}max${reset} ${l.max}ms`,
+		)
 	}
 
-	console.log(`\n  ${cyan}${bold}\u2500\u2500\u2500 chaos events (${s.totalEvents}) \u2500\u2500\u2500${reset}\n`)
+	console.log(
+		`\n  ${cyan}${bold}\u2500\u2500\u2500 chaos events (${s.totalEvents}) \u2500\u2500\u2500${reset}\n`,
+	)
 	for (const e of s.events) {
 		const width = Math.max(1, Math.round((e.count / maxCount) * 20))
 		const bar = "\u2588".repeat(width)
-		const color = ["delay", "slowTokens", "partialResponse"].includes(e.type) ? yellow
-			: ["corruptChunk"].includes(e.type) ? magenta : red
+		const color = ["delay", "slowTokens", "partialResponse"].includes(e.type)
+			? yellow
+			: ["corruptChunk"].includes(e.type)
+				? magenta
+				: red
 		console.log(`  ${color}${bar}${reset} ${e.type} ${dim}${e.count} (${e.percent}%)${reset}`)
 	}
 
@@ -186,7 +199,12 @@ function print(ctx: DiagnosticsContext) {
 		console.log(`\n  ${cyan}${bold}\u2500\u2500\u2500 errors \u2500\u2500\u2500${reset}\n`)
 		for (const r of s.errors) {
 			const status = r.status ? `${dim}${r.status}${reset} ` : ""
-			const retryable = r.retryable !== undefined ? (r.retryable ? `${yellow}retryable${reset}` : `${red}fatal${reset}`) : ""
+			const retryable =
+				r.retryable !== undefined
+					? r.retryable
+						? `${yellow}retryable${reset}`
+						: `${red}fatal${reset}`
+					: ""
 			const chaos = r.events.map((e) => e.type).join(" \u2192 ")
 			console.log(`  ${dim}#${r.id}${reset} ${status}${r.error}`)
 			console.log(`     ${retryable} ${dim}${r.ms}ms${reset} ${dim}[${chaos}]${reset}`)
@@ -198,12 +216,17 @@ function print(ctx: DiagnosticsContext) {
 		const icon = r.ok ? `${green}\u2713${reset}` : `${red}\u2717${reset}`
 		const chaos = r.events.map((e) => {
 			const ms = "ms" in e ? `${dim}${e.ms}ms${reset}` : ""
-			const color = ["delay", "slowTokens", "partialResponse"].includes(e.type) ? yellow
-				: ["corruptChunk"].includes(e.type) ? magenta : red
+			const color = ["delay", "slowTokens", "partialResponse"].includes(e.type)
+				? yellow
+				: ["corruptChunk"].includes(e.type)
+					? magenta
+					: red
 			return `${color}${e.type}${reset}${ms ? ` ${ms}` : ""}`
 		})
 		const chaosStr = chaos.length ? chaos.join(` ${dim}\u2192${reset} `) : `${dim}clean${reset}`
-		console.log(`  ${icon} ${dim}#${r.id}${reset} ${dim}${String(r.ms).padStart(5)}ms${reset}  ${chaosStr}`)
+		console.log(
+			`  ${icon} ${dim}#${r.id}${reset} ${dim}${String(r.ms).padStart(5)}ms${reset}  ${chaosStr}`,
+		)
 	}
 }
 
