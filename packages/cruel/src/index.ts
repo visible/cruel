@@ -1,6 +1,8 @@
 type MaybePromise<T> = T | Promise<T>
 type AnyFn = (...args: unknown[]) => unknown
 type AsyncFn<T> = (...args: unknown[]) => Promise<T>
+type Settled<T> = T extends PromiseLike<infer U> ? U : T
+type FallbackValue<T> = [T] extends [never] ? unknown : T
 
 interface ChaosOptions {
 	fail?: number
@@ -1085,21 +1087,23 @@ function withTimeout<T extends AnyFn>(fn: T, options: TimeoutOptions): T {
 }
 
 interface FallbackOptions<T> {
-	fallback: T | (() => T) | (() => Promise<T>)
+	fallback: FallbackValue<T> | (() => MaybePromise<FallbackValue<T>>)
 	onFallback?: (error: Error) => void
 }
 
-function withFallback<T extends AnyFn>(fn: T, options: FallbackOptions<ReturnType<T>>): T {
-	const wrapped = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+function withFallback<T extends AnyFn>(fn: T, options: FallbackOptions<Settled<ReturnType<T>>>): T {
+	const wrapped = async (...args: Parameters<T>): Promise<Settled<ReturnType<T>>> => {
 		try {
-			return (await fn(...args)) as ReturnType<T>
+			return (await fn(...args)) as Settled<ReturnType<T>>
 		} catch (e) {
 			options.onFallback?.(e as Error)
 			const fb = options.fallback
 			if (typeof fb === "function") {
-				return (fb as () => ReturnType<T>)()
+				return (await (
+					fb as () => MaybePromise<FallbackValue<Settled<ReturnType<T>>>>
+				)()) as Settled<ReturnType<T>>
 			}
-			return fb
+			return fb as Settled<ReturnType<T>>
 		}
 	}
 	return wrapped as T
@@ -1305,7 +1309,7 @@ function wrap<T extends AnyFn>(fn: T, options: WrapOptions): T {
 	}
 
 	if (options.fallback !== undefined) {
-		wrapped = withFallback(wrapped, { fallback: options.fallback as ReturnType<T> })
+		wrapped = withFallback(wrapped, { fallback: options.fallback as Settled<ReturnType<T>> })
 	}
 
 	if (options.hedge) {

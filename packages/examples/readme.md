@@ -22,7 +22,13 @@ bun run run.ts ai-sdk stream-text groq
 bun run run.ts heavy
 bun run run.ts with-tools
 bun run run.ts with-diagnostics
+
+# override model id for all matched examples
+bun run run.ts ai-sdk openai -m gpt-6
+bun run run.ts ai-gateway openai --model gpt-6
 ```
+
+`-m`/`--model` sets `MODEL` for each spawned example process.
 
 ## structure
 

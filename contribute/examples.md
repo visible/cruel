@@ -150,5 +150,5 @@ bun run examples:heavy                 # all stress tests
 bun run run.ts google                  # custom filter
 bun run run.ts stream-text             # all stream-text examples
 bun run run.ts with-diagnostics        # all diagnostics examples
+bun run run.ts ai-sdk openai -m gpt-6  # override model id for matched examples
 ```
-

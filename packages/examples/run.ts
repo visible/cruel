@@ -4,10 +4,35 @@ import { join, relative } from "node:path"
 import { cyan, dim, green, red, reset } from "./lib/colors"
 
 const root = import.meta.dirname
-const filters = process.argv.slice(2)
+const args = process.argv.slice(2)
+const filters: string[] = []
+let model: string | undefined
+
+for (let i = 0; i < args.length; i++) {
+	const arg = args[i]
+	if (arg === "-m" || arg === "--model") {
+		model = args[i + 1]
+		i++
+		continue
+	}
+	if (arg.startsWith("--model=")) {
+		model = arg.slice("--model=".length)
+		continue
+	}
+	filters.push(arg)
+}
+
+if ((args.includes("-m") || args.includes("--model")) && !model) {
+	console.log(`\n  ${red}\u2717${reset} missing model id after -m/--model\n`)
+	process.exit(1)
+}
+if (model !== undefined && model.length === 0) {
+	console.log(`\n  ${red}\u2717${reset} missing model id after --model=\n`)
+	process.exit(1)
+}
 
 if (filters.length === 0) {
-	console.log(`\n  ${cyan}usage${reset}  bun run run.ts <filters...>\n`)
+	console.log(`\n  ${cyan}usage${reset}  bun run run.ts <filters...> [-m <model>]\n`)
 	console.log(`  ${dim}by provider${reset}`)
 	console.log(`    bun run run.ts openai`)
 	console.log(`    bun run run.ts anthropic`)
@@ -24,6 +49,10 @@ if (filters.length === 0) {
 	console.log(`    bun run run.ts heavy`)
 	console.log(`    bun run run.ts with-tools`)
 	console.log(`    bun run run.ts with-diagnostics`)
+	console.log()
+	console.log(`  ${dim}model override${reset}`)
+	console.log(`    bun run run.ts ai-sdk openai -m gpt-6`)
+	console.log(`    bun run run.ts ai-gateway openai --model gpt-6`)
 	console.log()
 	process.exit(0)
 }
@@ -56,6 +85,9 @@ if (matches.length === 0) {
 console.log(
 	`\n  ${cyan}\u25b8${reset} ${matches.length} examples matching "${filters.join(" ")}"\n`,
 )
+if (model) {
+	console.log(`  ${cyan}\u25b8${reset} model override "${model}"\n`)
+}
 
 for (const file of matches) {
 	const rel = relative(root, file)
@@ -64,7 +96,7 @@ for (const file of matches) {
 	const child = spawn("bun", ["run", file], {
 		cwd: root,
 		stdio: "inherit",
-		env: { ...process.env },
+		env: model ? { ...process.env, MODEL: model } : { ...process.env },
 	})
 
 	const code = await new Promise<number>((resolve) => {

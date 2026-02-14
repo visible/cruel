@@ -1,7 +1,7 @@
 import { openai } from "@ai-sdk/openai"
 import { generateText, stepCountIs, tool } from "ai"
 import type { CruelChaosOptions } from "cruel/ai-sdk"
-import { cruelModel, cruelTool } from "cruel/ai-sdk"
+import { cruelModel, cruelTools } from "cruel/ai-sdk"
 import { z } from "zod"
 import { log } from "../../lib/chaos"
 import { print } from "../../lib/print"
@@ -26,13 +26,11 @@ run(async () => {
 		inputSchema: z.object({ expression: z.string() }),
 		execute: async ({ expression }) => expression,
 	})
+	const tools = cruelTools({ search, calculate }, chaosOpts)
 
 	const result = await generateText({
 		model,
-		tools: {
-			search: cruelTool(search, chaosOpts),
-			calculate: cruelTool(calculate, chaosOpts),
-		},
+		tools,
 		stopWhen: stepCountIs(5),
 		prompt: "Search for the population of Tokyo then calculate 10% of it.",
 	})

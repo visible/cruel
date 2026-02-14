@@ -178,6 +178,13 @@
     delay: [50, 200],
   })
 
+> examples model override?
+
+  cd packages/examples
+  bun run run.ts ai-sdk openai -m gpt-6
+  bun run run.ts ai-gateway openai --model gpt-6
+  // this sets MODEL for each matched example process
+
 > circuit breaker?
 
   const api = cruel.circuitBreaker(fetch, {

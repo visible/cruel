@@ -35,8 +35,9 @@ cruel/
 | run tests           | `cd packages/cruel && bun test`                             |
 | run single test     | `cd packages/cruel && bun test src/file.test.ts`            |
 | run example         | `cd packages/examples && bun run ai-sdk/generate-text/openai/basic.ts` |
-| run all for provider| `cd packages/examples && bun run examples:openai`           |
+| run all for provider| `cd packages/examples && bun run examples:ai-sdk:openai`    |
 | run all heavy       | `cd packages/examples && bun run examples:heavy`            |
+| run with model override | `cd packages/examples && bun run run.ts ai-sdk openai -m gpt-6` |
 | dev website         | `cd packages/web && bun run dev`                            |
 
 ## package entry points

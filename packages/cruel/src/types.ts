@@ -101,13 +101,42 @@ interface LanguageModelV3ToolApprovalResponsePart {
 	providerOptions?: SharedV3ProviderOptions
 }
 
+type LanguageModelV3ToolResultContentPart =
+	| { type: "text"; text: string; providerOptions?: SharedV3ProviderOptions }
+	| {
+			type: "file-data"
+			data: string
+			mediaType: string
+			filename?: string
+			providerOptions?: SharedV3ProviderOptions
+	  }
+	| { type: "file-url"; url: string; providerOptions?: SharedV3ProviderOptions }
+	| {
+			type: "file-id"
+			fileId: string | Record<string, string>
+			providerOptions?: SharedV3ProviderOptions
+	  }
+	| {
+			type: "image-data"
+			data: string
+			mediaType: string
+			providerOptions?: SharedV3ProviderOptions
+	  }
+	| { type: "image-url"; url: string; providerOptions?: SharedV3ProviderOptions }
+	| {
+			type: "image-file-id"
+			fileId: string | Record<string, string>
+			providerOptions?: SharedV3ProviderOptions
+	  }
+	| { type: "custom"; providerOptions?: SharedV3ProviderOptions }
+
 type LanguageModelV3ToolResultOutput =
 	| { type: "text"; value: string; providerOptions?: SharedV3ProviderOptions }
 	| { type: "json"; value: JSONValue; providerOptions?: SharedV3ProviderOptions }
 	| { type: "execution-denied"; reason?: string; providerOptions?: SharedV3ProviderOptions }
 	| { type: "error-text"; value: string; providerOptions?: SharedV3ProviderOptions }
 	| { type: "error-json"; value: JSONValue; providerOptions?: SharedV3ProviderOptions }
-	| { type: "content"; value: Array<Record<string, unknown>> }
+	| { type: "content"; value: Array<LanguageModelV3ToolResultContentPart> }
 
 type LanguageModelV3Message = (
 	| { role: "system"; content: string }

@@ -64,6 +64,14 @@ function sleep(ms: number): Promise<void> {
 	return new Promise((r) => setTimeout(r, ms))
 }
 
+function resolveModelId(id: string): string {
+	const override = globalThis.process?.env?.MODEL
+	if (!override) return id
+	const index = id.indexOf("/")
+	if (index === -1) return override
+	return `${id.slice(0, index)}/${override}`
+}
+
 async function applyChaos(opts: CruelChaosOptions | undefined, modelId?: string): Promise<void> {
 	if (!opts) return
 	const id = modelId ?? "unknown"
@@ -295,18 +303,19 @@ function applyStreamChaos(
 }
 
 function cruelModel<T extends LanguageModelV3>(model: T, options?: CruelModelOptions): T {
-	const modelId = model.modelId
+	const modelId = resolveModelId(model.modelId)
+	const wrapped = { ...model, modelId } as T
 	return {
-		...model,
+		...wrapped,
 		modelId,
 		doGenerate: async (params: LanguageModelV3CallOptions) => {
 			await applyChaos(options, modelId)
-			const result = await model.doGenerate(params)
+			const result = await model.doGenerate.call(wrapped, params)
 			return applyPostChaos(result, options, modelId)
 		},
 		doStream: async (params: LanguageModelV3CallOptions) => {
 			await applyChaos(options, modelId)
-			const result = await model.doStream(params)
+			const result = await model.doStream.call(wrapped, params)
 			return {
 				...result,
 				stream: applyStreamChaos(result.stream, options, modelId),
@@ -319,37 +328,40 @@ function cruelEmbeddingModel<T extends EmbeddingModelV3>(
 	model: T,
 	options?: CruelEmbeddingOptions,
 ): T {
-	const modelId = model.modelId
+	const modelId = resolveModelId(model.modelId)
+	const wrapped = { ...model, modelId } as T
 	return {
-		...model,
+		...wrapped,
 		modelId,
 		doEmbed: async (params: EmbeddingModelV3CallOptions) => {
 			await applyChaos(options, modelId)
-			return model.doEmbed(params)
+			return model.doEmbed.call(wrapped, params)
 		},
 	} as T
 }
 
 function cruelImageModel<T extends ImageModelV3>(model: T, options?: CruelImageOptions): T {
-	const modelId = model.modelId
+	const modelId = resolveModelId(model.modelId)
+	const wrapped = { ...model, modelId } as T
 	return {
-		...model,
+		...wrapped,
 		modelId,
 		doGenerate: async (params: ImageModelV3CallOptions) => {
 			await applyChaos(options, modelId)
-			return model.doGenerate(params)
+			return model.doGenerate.call(wrapped, params)
 		},
 	} as T
 }
 
 function cruelSpeechModel<T extends SpeechModelV3>(model: T, options?: CruelSpeechOptions): T {
-	const modelId = model.modelId
+	const modelId = resolveModelId(model.modelId)
+	const wrapped = { ...model, modelId } as T
 	return {
-		...model,
+		...wrapped,
 		modelId,
 		doGenerate: async (params: SpeechModelV3CallOptions) => {
 			await applyChaos(options, modelId)
-			return model.doGenerate(params)
+			return model.doGenerate.call(wrapped, params)
 		},
 	} as T
 }
@@ -358,25 +370,27 @@ function cruelTranscriptionModel<T extends TranscriptionModelV3>(
 	model: T,
 	options?: CruelTranscriptionOptions,
 ): T {
-	const modelId = model.modelId
+	const modelId = resolveModelId(model.modelId)
+	const wrapped = { ...model, modelId } as T
 	return {
-		...model,
+		...wrapped,
 		modelId,
 		doGenerate: async (params: TranscriptionModelV3CallOptions) => {
 			await applyChaos(options, modelId)
-			return model.doGenerate(params)
+			return model.doGenerate.call(wrapped, params)
 		},
 	} as T
 }
 
 function cruelVideoModel<T extends VideoModelV3>(model: T, options?: CruelVideoOptions): T {
-	const modelId = model.modelId
+	const modelId = resolveModelId(model.modelId)
+	const wrapped = { ...model, modelId } as T
 	return {
-		...model,
+		...wrapped,
 		modelId,
 		doGenerate: async (params: VideoModelV3CallOptions) => {
 			await applyChaos(options, modelId)
-			return model.doGenerate(params)
+			return model.doGenerate.call(wrapped, params)
 		},
 	} as T
 }
@@ -422,8 +436,12 @@ function cruelProvider<T extends ProviderV3>(provider: T, options?: CruelProvide
 			const value = Reflect.get(target, prop)
 			if (typeof value === "function" && typeof prop === "string" && modelMethods.has(prop)) {
 				return (...args: unknown[]) => {
-					const model = value.apply(target, args)
-					const modelId = typeof args[0] === "string" ? args[0] : undefined
+					const next = [...args]
+					if (typeof next[0] === "string") {
+						next[0] = resolveModelId(next[0])
+					}
+					const model = value.apply(target, next)
+					const modelId = typeof next[0] === "string" ? next[0] : undefined
 					const modelOpts = modelId ? options?.models?.[modelId] : undefined
 					return wrapProviderModel(prop, model, { ...options, ...modelOpts })
 				}
@@ -432,8 +450,12 @@ function cruelProvider<T extends ProviderV3>(provider: T, options?: CruelProvide
 		},
 		apply(target, thisArg, args) {
 			const fn = target as unknown as (...a: unknown[]) => LanguageModelV3
-			const model = Reflect.apply(fn, thisArg, args)
-			const modelId = typeof args[0] === "string" ? args[0] : undefined
+			const next = [...args]
+			if (typeof next[0] === "string") {
+				next[0] = resolveModelId(next[0])
+			}
+			const model = Reflect.apply(fn, thisArg, next)
+			const modelId = typeof next[0] === "string" ? next[0] : undefined
 			const modelOpts = modelId ? options?.models?.[modelId] : undefined
 			return cruelModel(model, { ...options, ...modelOpts })
 		},
@@ -459,14 +481,24 @@ function cruelMiddleware(options?: CruelMiddlewareOptions): LanguageModelV3Middl
 	}
 }
 
-function cruelTool<T extends { execute: (...args: any[]) => any }>(
-	tool: T,
-	options?: CruelChaosOptions,
-): T {
-	const original = tool.execute
-	return {
-		...tool,
-		execute: async (...args: Parameters<T["execute"]>) => {
+type executable = (...args: unknown[]) => unknown
+type toolshape = { execute: executable }
+type wrappedtool<T extends toolshape> = Omit<T, "execute"> & {
+	execute: (...args: Parameters<T["execute"]>) => Promise<Awaited<ReturnType<T["execute"]>>>
+}
+type wrappedtools<T extends Record<string, unknown>> = {
+	[K in keyof T]: T[K] extends toolshape ? wrappedtool<T[K]> : T[K]
+}
+
+function cruelTool<T extends toolshape>(tool: T, options?: CruelChaosOptions): wrappedtool<T>
+function cruelTool<T>(tool: T, options?: CruelChaosOptions): T
+function cruelTool(tool: unknown, options?: CruelChaosOptions): unknown {
+	const candidate = tool as { execute?: executable }
+	const original = candidate.execute
+	if (typeof original !== "function") return tool
+	const wrapped = {
+		...(tool as Record<string, unknown>),
+		execute: async (...args: unknown[]) => {
 			if (chance(options?.toolFailure)) {
 				options?.onChaos?.({ type: "toolFailure" })
 				throw new Error("Tool execution failed")
@@ -477,20 +509,21 @@ function cruelTool<T extends { execute: (...args: any[]) => any }>(
 			}
 			const delay = getDelay(options?.delay)
 			if (delay > 0) await sleep(delay)
-			return original.apply(tool, args)
+			return original.apply(candidate, args)
 		},
 	}
+	return wrapped
 }
 
-function cruelTools<T extends Record<string, { execute: (...args: any[]) => any }>>(
+function cruelTools<T extends Record<string, unknown>>(
 	tools: T,
 	options?: CruelChaosOptions,
-): T {
+): wrappedtools<T> {
 	const wrapped = {} as Record<string, unknown>
 	for (const [name, tool] of Object.entries(tools)) {
-		wrapped[name] = cruelTool(tool as { execute: (...args: never[]) => unknown }, options)
+		wrapped[name] = cruelTool(tool, options)
 	}
-	return wrapped as T
+	return wrapped as wrappedtools<T>
 }
 
 const presets = {

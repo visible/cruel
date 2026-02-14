@@ -122,6 +122,18 @@ describe("cruelModel", () => {
 		expect(wrapped.modelId).toBe("test-model")
 	})
 
+	test("uses MODEL env override for modelId", () => {
+		const current = process.env.MODEL
+		process.env.MODEL = "gpt-6"
+		try {
+			const model = createMockModel({ modelId: "openai/gpt-4o" })
+			const wrapped = cruelModel(model)
+			expect(wrapped.modelId).toBe("openai/gpt-6")
+		} finally {
+			process.env.MODEL = current
+		}
+	})
+
 	test("throws on rateLimit=1", async () => {
 		const model = createMockModel()
 		const wrapped = cruelModel(model, { rateLimit: 1 })
@@ -418,6 +430,29 @@ describe("cruelProvider", () => {
 		const wrappedModel = wrapped.languageModel("test-model")
 		const result = await wrappedModel.doGenerate(TEST_PARAMS)
 		expect(contentText(result)).toBe("hello world this is a test response")
+	})
+
+	test("uses MODEL env override for provider ids", () => {
+		const current = process.env.MODEL
+		process.env.MODEL = "gpt-6"
+		let received = ""
+		try {
+			const provider: ProviderV3 = {
+				specificationVersion: "v3",
+				languageModel: (id: string) => {
+					received = id
+					return createMockModel({ modelId: id })
+				},
+				embeddingModel: () => createMockEmbeddingModel(),
+				imageModel: () => createMockImageModel(),
+			}
+			const wrapped = cruelProvider(provider)
+			const model = wrapped.languageModel("openai/gpt-4o")
+			expect(received).toBe("openai/gpt-6")
+			expect(model.modelId).toBe("openai/gpt-6")
+		} finally {
+			process.env.MODEL = current
+		}
 	})
 
 	test("applies chaos to provider models", async () => {
