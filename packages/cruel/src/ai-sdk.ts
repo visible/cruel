@@ -414,8 +414,6 @@ const modelMethods = new Set([
 	"speechModel",
 	"transcriptionModel",
 	"videoModel",
-	"rankingModel",
-	"rerankingModel",
 ])
 
 function cruelProvider<T extends ProviderV3>(provider: T, options?: CruelProviderOptions): T {
