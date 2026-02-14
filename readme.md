@@ -181,9 +181,15 @@
 > examples model override?
 
   cd packages/examples
+  bun run run.ts core
   bun run run.ts ai-sdk openai -m gpt-6
   bun run run.ts ai-gateway openai --model gpt-6
   // this sets MODEL for each matched example process
+
+> quality gate?
+
+  bun run qa
+  // lint + typecheck + build + test + docs build + user smoke examples
 
 > circuit breaker?
 

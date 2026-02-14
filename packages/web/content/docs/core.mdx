@@ -19,6 +19,15 @@ const res = await api("https://api.example.com")
 
 `cruel(fn, options)` injects chaos into async functions.
 
+## try without api keys
+
+```bash
+cd packages/examples
+bun run run.ts core
+```
+
+this runs local core examples only (`core/basic.ts`, `core/resilience.ts`, `core/control.ts`).
+
 ## chaos options
 
 ```ts

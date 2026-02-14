@@ -25,6 +25,7 @@
 		"examples:ai-gateway:reasoning": "bun run run.ts ai-gateway reasoning",
 		"examples:ai-gateway:tools": "bun run run.ts ai-gateway tools",
 		"examples:ai-gateway:failover": "bun run run.ts ai-gateway failover",
+		"examples:core": "bun run run.ts core",
 		"examples:heavy": "bun run run.ts heavy",
 		"examples:with-tools": "bun run run.ts with-tools"
 	},
