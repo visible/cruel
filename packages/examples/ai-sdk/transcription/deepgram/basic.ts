@@ -15,7 +15,6 @@ run(async () => {
 	const result = await transcribe({
 		model,
 		audio: new Uint8Array(1024),
-		mediaType: "audio/wav",
 	})
 
 	print("text:", result.text)
