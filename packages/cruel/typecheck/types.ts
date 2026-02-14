@@ -26,6 +26,8 @@ const stack = cruel.compose(task, {
 	circuitBreaker: { threshold: 2, timeout: 1000 },
 	fallback: { id: "fallback" },
 })
+const timeout = cruel.compose(task, { timeoutMs: 100 })
+const chaos = cruel.compose(task, { timeout: 0.5 })
 
 const one = verify<equal<ChaosOptions["fail"], number | undefined>>()
 const two = verify<extend<WrapOptions["retry"], RetryOptions | undefined>>()
@@ -37,5 +39,7 @@ const seven =
 	verify<extend<ReturnType<typeof breaker.getState>, { state: "closed" | "open" | "half-open" }>>()
 const eight = verify<equal<ReturnType<typeof made>, Promise<{ id: string }>>>()
 const nine = verify<equal<Awaited<ReturnType<typeof stack>>, { id: string }>>()
+const ten = verify<equal<ReturnType<typeof timeout>, Promise<{ id: string }>>>()
+const eleven = verify<equal<ReturnType<typeof chaos>, Promise<{ id: string }>>>()
 
-void [one, two, three, four, five, six, seven, eight, nine]
+void [one, two, three, four, five, six, seven, eight, nine, ten, eleven]

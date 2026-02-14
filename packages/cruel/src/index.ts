@@ -64,12 +64,6 @@ interface ScenarioConfig {
 	name: string
 	duration?: number
 	chaos?: ChaosOptions
-	network?: NetworkOptions
-	http?: HttpOptions
-	stream?: StreamOptions
-	resource?: ResourceOptions
-	ai?: AIOptions
-	ramp?: { start: number; end: number; over: number }
 }
 
 interface Stats {
@@ -86,7 +80,7 @@ interface Stats {
 
 interface InterceptRule {
 	pattern: string | RegExp
-	options: HttpOptions | AIOptions
+	options: HttpOptions
 }
 
 interface CruelConfig {
@@ -265,16 +259,20 @@ async function applyChaos<T>(
 	const start = Date.now()
 	const o = state.enabled ? merge(state.globalChaos, opts) : opts
 	if (o.enabled === false) return fn()
+	emitEvent("call", { target })
 
 	if (chance(o.timeout)) {
 		state.stats.timeouts++
 		trackStats(target, true)
+		emitEvent("timeout", { target, duration: Date.now() - start })
 		return new Promise(() => {})
 	}
 
 	if (chance(o.fail)) {
+		const error = new CruelError()
 		trackStats(target, true, Date.now() - start)
-		throw new CruelError()
+		emitEvent("failure", { target, error, duration: Date.now() - start })
+		throw error
 	}
 
 	const delay = getDelay(o.delay)
@@ -286,9 +284,25 @@ async function applyChaos<T>(
 		await sleep(delay + jitter + spike)
 	}
 
-	const result = await fn()
-	trackStats(target, false, Date.now() - start)
-	return result
+	try {
+		const result = await fn()
+		if (chance(o.corrupt) && typeof result === "string") {
+			state.stats.corrupted++
+			const pos = Math.floor(random() * result.length)
+			const corrupted = `${result.slice(0, pos)}�${result.slice(pos + 1)}`
+			trackStats(target, false, Date.now() - start)
+			emitEvent("success", { target, duration: Date.now() - start })
+			return corrupted as T
+		}
+		trackStats(target, false, Date.now() - start)
+		emitEvent("success", { target, duration: Date.now() - start })
+		return result as T
+	} catch (error) {
+		const e = error as Error
+		trackStats(target, true, Date.now() - start)
+		emitEvent("failure", { target, error: e, duration: Date.now() - start })
+		throw e
+	}
 }
 
 function cruel<T extends AnyFn>(fn: T, options: ChaosOptions = {}): T {
@@ -332,6 +346,18 @@ const network = {
 		const wrapped = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
 			if (chance(rate)) throw new CruelNetworkError("dns_failure")
 			return fn(...args) as ReturnType<T>
+		}
+		return wrapped as T
+	},
+
+	bandwidth: <T extends AsyncFn<string>>(fn: T, kbps = 256): T => {
+		const wrapped = async (...args: Parameters<T>): Promise<string> => {
+			const result = (await fn(...args)) as string
+			if (kbps <= 0) return result
+			const bytes = new TextEncoder().encode(result).length
+			const ms = Math.max(1, Math.round((bytes * 8 * 1000) / (kbps * 1024)))
+			await sleep(ms)
+			return result
 		}
 		return wrapped as T
 	},
@@ -446,6 +472,47 @@ const stream = {
 		}
 		return wrapped as T
 	},
+
+	reorder: <T extends AsyncFn<string>>(fn: T, rate = 0.1): T => {
+		const wrapped = async (...args: Parameters<T>): Promise<string> => {
+			let result = (await fn(...args)) as string
+			if (chance(rate) && typeof result === "string" && result.length > 2) {
+				const mid = Math.floor(result.length / 2)
+				result = `${result.slice(mid)}${result.slice(0, mid)}`
+			}
+			return result
+		}
+		return wrapped as T
+	},
+
+	duplicate: <T extends AsyncFn<string>>(fn: T, rate = 0.1): T => {
+		const wrapped = async (...args: Parameters<T>): Promise<string> => {
+			let result = (await fn(...args)) as string
+			if (chance(rate) && typeof result === "string" && result.length > 0) {
+				const start = Math.floor(result.length * 0.25)
+				const end = Math.max(start + 1, Math.floor(result.length * 0.5))
+				const part = result.slice(start, end)
+				result = `${result}${part}`
+			}
+			return result
+		}
+		return wrapped as T
+	},
+
+	dropChunks: <T extends AsyncFn<string>>(fn: T, rate = 0.1): T => {
+		const wrapped = async (...args: Parameters<T>): Promise<string> => {
+			let result = (await fn(...args)) as string
+			if (chance(rate) && typeof result === "string" && result.length > 2) {
+				const start = Math.floor(result.length * 0.2)
+				const end = Math.max(start + 1, Math.floor(result.length * 0.4))
+				result = `${result.slice(0, start)}${result.slice(end)}`
+			}
+			return result
+		}
+		return wrapped as T
+	},
+
+	corruptChunks: <T extends AsyncFn<string>>(fn: T, rate = 0.1): T => stream.corrupt(fn, rate),
 
 	slow: <T extends AnyFn>(fn: T): T => stream.pause(fn, [1000, 5000]),
 
@@ -616,6 +683,7 @@ cruel.reset = (): void => {
 	}
 	state.timers.forEach(clearTimeout)
 	state.timers = []
+	eventHandlers.length = 0
 	resetRng()
 	if (state.fetchPatched) {
 		globalThis.fetch = state.originalFetch
@@ -688,7 +756,7 @@ cruel.stop = (): void => {
 
 cruel.activeScenario = (): string | null => state.activeScenario
 
-cruel.intercept = (pattern: string | RegExp, opts: HttpOptions | AIOptions): void => {
+cruel.intercept = (pattern: string | RegExp, opts: HttpOptions): void => {
 	state.intercepts.push({ pattern, options: opts })
 }
 
@@ -703,6 +771,7 @@ cruel.patchFetch = (): void => {
 
 	globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
 		const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url
+		const transforms: HttpOptions[] = []
 
 		for (const rule of state.intercepts) {
 			const matches =
@@ -737,7 +806,8 @@ cruel.patchFetch = (): void => {
 				if (opts.status) {
 					const status = Array.isArray(opts.status) ? pick(opts.status) : opts.status
 					if (chance(opts.fail ?? 1)) {
-						return new Response(JSON.stringify({ error: `http ${status}` }), { status })
+						const headers = new Headers(opts.headers)
+						return new Response(JSON.stringify({ error: `http ${status}` }), { status, headers })
 					}
 				}
 
@@ -746,10 +816,60 @@ cruel.patchFetch = (): void => {
 					state.stats.delays++
 					await sleep(delay)
 				}
+
+				transforms.push(opts)
 			}
 		}
 
-		return state.originalFetch(input, init)
+		let response = await state.originalFetch(input, init)
+		for (const opts of transforms) {
+			const slow = getDelay(opts.slowBody)
+			if (slow > 0) {
+				state.stats.delays++
+				await sleep(slow)
+			}
+
+			if (opts.truncate && chance(opts.truncate)) {
+				const body = await response.text()
+				const cut = Math.floor(body.length * 0.8)
+				const headers = new Headers(response.headers)
+				if (opts.headers) {
+					for (const [k, v] of Object.entries(opts.headers)) headers.set(k, v)
+				}
+				response = new Response(body.slice(0, cut), {
+					status: response.status,
+					statusText: response.statusText,
+					headers,
+				})
+				continue
+			}
+
+			if (opts.malformed && chance(opts.malformed)) {
+				const body = await response.text()
+				const headers = new Headers(response.headers)
+				if (opts.headers) {
+					for (const [k, v] of Object.entries(opts.headers)) headers.set(k, v)
+				}
+				response = new Response(`${body}{`, {
+					status: response.status,
+					statusText: response.statusText,
+					headers,
+				})
+				continue
+			}
+
+			if (opts.headers && Object.keys(opts.headers).length > 0) {
+				const headers = new Headers(response.headers)
+				for (const [k, v] of Object.entries(opts.headers)) headers.set(k, v)
+				response = new Response(response.body, {
+					status: response.status,
+					statusText: response.statusText,
+					headers,
+				})
+			}
+		}
+
+		return response
 	}
 }
 
@@ -963,6 +1083,7 @@ function createCircuitBreaker<T extends AnyFn>(
 			if (cbState.state === "half-open") {
 				cbState.state = "closed"
 				cbState.failures = 0
+				emitEvent("circuitClose")
 				options.onClose?.()
 			} else if (cbState.failures > 0) {
 				cbState.failures = 0
@@ -973,6 +1094,7 @@ function createCircuitBreaker<T extends AnyFn>(
 			cbState.lastFailure = Date.now()
 			if (cbState.state === "half-open" || cbState.failures >= threshold) {
 				cbState.state = "open"
+				emitEvent("circuitOpen")
 				options.onOpen?.()
 			}
 			throw e
@@ -1017,6 +1139,7 @@ function withRetry<T extends AnyFn>(fn: T, options: RetryOptions): T {
 				}
 				if (attempt < attempts) {
 					options.onRetry?.(attempt, lastError)
+					emitEvent("retry", { error: lastError })
 					let delay = getDelay(options.delay ?? 1000)
 					if (options.backoff === "linear") {
 						delay = delay * attempt
@@ -1319,7 +1442,7 @@ interface WrapOptions extends ChaosOptions {
 	retry?: RetryOptions
 	circuitBreaker?: CircuitBreakerOptions
 	bulkhead?: BulkheadOptions
-	timeout?: number
+	timeoutMs?: number
 	fallback?: unknown
 	cache?: CacheOptions<unknown>
 	rateLimiter?: RateLimiterOptions
@@ -1349,8 +1472,16 @@ function wrap<T extends AnyFn>(fn: T, options: WrapOptions): T {
 		wrapped = withRetry(wrapped, options.retry)
 	}
 
-	if (options.timeout && typeof options.timeout === "number" && options.timeout > 0) {
-		wrapped = withTimeout(wrapped, { ms: options.timeout })
+	let timeoutMs = options.timeoutMs
+	let timeoutRate = options.timeout
+
+	if (timeoutMs === undefined && typeof options.timeout === "number" && options.timeout > 1) {
+		timeoutMs = options.timeout
+		timeoutRate = undefined
+	}
+
+	if (typeof timeoutMs === "number" && timeoutMs > 0) {
+		wrapped = withTimeout(wrapped, { ms: timeoutMs })
 	}
 
 	if (options.fallback !== undefined) {
@@ -1364,7 +1495,10 @@ function wrap<T extends AnyFn>(fn: T, options: WrapOptions): T {
 	const chaosOpts: ChaosOptions = {
 		fail: options.fail,
 		delay: options.delay,
+		timeout: timeoutRate,
 		jitter: options.jitter,
+		corrupt: options.corrupt,
+		spike: options.spike,
 		enabled: options.enabled,
 	}
 

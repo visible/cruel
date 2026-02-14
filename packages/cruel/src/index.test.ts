@@ -57,6 +57,14 @@ describe("cruel", () => {
 		expect(elapsed).toBeGreaterThanOrEqual(45)
 		expect(elapsed).toBeLessThanOrEqual(150)
 	})
+
+	test("corrupt mutates string results", async () => {
+		cruel.seed(12345)
+		const fn = () => Promise.resolve("hello world")
+		const wrapped = cruel(fn, { corrupt: 1 })
+		const value = await wrapped()
+		expect(value).toContain("�")
+	})
 })
 
 describe("cruel.fail", () => {
@@ -349,6 +357,52 @@ describe("cruel.scenario", () => {
 		await new Promise((r) => setTimeout(r, 10))
 		cruel.stop()
 		expect(cruel.activeScenario()).toBe(null)
+	})
+})
+
+describe("cruel.patchFetch", () => {
+	test("applies intercept headers", async () => {
+		const original = globalThis.fetch
+		globalThis.fetch = async () => new Response("ok", { status: 200 })
+		try {
+			cruel.intercept("example.com", { headers: { "x-test": "1" } })
+			cruel.patchFetch()
+			const res = await fetch("https://example.com")
+			expect(res.headers.get("x-test")).toBe("1")
+		} finally {
+			cruel.unpatchFetch()
+			globalThis.fetch = original
+		}
+	})
+
+	test("applies truncate transform", async () => {
+		const original = globalThis.fetch
+		globalThis.fetch = async () => new Response("abcdef", { status: 200 })
+		try {
+			cruel.intercept("example.com", { truncate: 1 })
+			cruel.patchFetch()
+			const res = await fetch("https://example.com")
+			const text = await res.text()
+			expect(text.length).toBeLessThan(6)
+		} finally {
+			cruel.unpatchFetch()
+			globalThis.fetch = original
+		}
+	})
+
+	test("applies malformed transform", async () => {
+		const original = globalThis.fetch
+		globalThis.fetch = async () => new Response('{"ok":true}', { status: 200 })
+		try {
+			cruel.intercept("example.com", { malformed: 1 })
+			cruel.patchFetch()
+			const res = await fetch("https://example.com")
+			const text = await res.text()
+			expect(text.endsWith("{")).toBe(true)
+		} finally {
+			cruel.unpatchFetch()
+			globalThis.fetch = original
+		}
 	})
 })
 
@@ -784,18 +838,40 @@ describe("cruel.cache", () => {
 })
 
 describe("cruel.on", () => {
-	test("registers event handler", () => {
+	test("registers event handler", async () => {
 		const events: string[] = []
 		const off = cruel.on((e) => events.push(e.type))
+		const fn = cruel(async () => "ok")
+		await fn()
+		expect(events.includes("call")).toBe(true)
+		expect(events.includes("success")).toBe(true)
 		expect(typeof off).toBe("function")
 		off()
 	})
 
-	test("removes handler when called", () => {
+	test("removes handler when called", async () => {
 		const events: string[] = []
 		const off = cruel.on((e) => events.push(e.type))
 		off()
+		const fn = cruel(async () => "ok")
+		await fn()
+		expect(events.length).toBe(0)
 		cruel.removeAllListeners()
+	})
+
+	test("emits retry and circuit events", async () => {
+		const events: string[] = []
+		const off = cruel.on((e) => events.push(e.type))
+		const fn = async () => {
+			throw new Error("fail")
+		}
+		const retryFn = cruel.retry(fn, { attempts: 2, delay: 1 })
+		await expect(retryFn()).rejects.toThrow("fail")
+		const breaker = cruel.circuitBreaker(fn, { threshold: 1, timeout: 1000 })
+		await expect(breaker()).rejects.toThrow("fail")
+		expect(events.includes("retry")).toBe(true)
+		expect(events.includes("circuitOpen")).toBe(true)
+		off()
 	})
 })
 
@@ -824,6 +900,35 @@ describe("cruel.compose", () => {
 			cache: { ttl: 1000 },
 		})
 		expect(await composed()).toBe("ok")
+	})
+
+	test("supports timeoutMs in compose", async () => {
+		const fn = async () => {
+			await new Promise((r) => setTimeout(r, 100))
+			return "ok"
+		}
+		const composed = cruel.compose(fn, { timeoutMs: 10 })
+		await expect(composed()).rejects.toThrow(CruelTimeoutError)
+	})
+
+	test("keeps timeout as chaos probability", async () => {
+		const fn = async () => "ok"
+		const composed = cruel.compose(fn, { timeout: 1 })
+		let resolved = false
+		composed().then(() => {
+			resolved = true
+		})
+		await new Promise((r) => setTimeout(r, 50))
+		expect(resolved).toBe(false)
+	})
+
+	test("treats timeout > 1 as timeout ms for compatibility", async () => {
+		const fn = async () => {
+			await new Promise((r) => setTimeout(r, 100))
+			return "ok"
+		}
+		const composed = cruel.compose(fn, { timeout: 10 })
+		await expect(composed()).rejects.toThrow(CruelTimeoutError)
 	})
 })
 
