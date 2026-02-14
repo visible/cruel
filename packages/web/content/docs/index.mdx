@@ -62,7 +62,7 @@ const model = cruelModel(openai("gpt-4o"), {
 const result = streamText({ model, prompt: "hello" })
 
 for await (const chunk of result.fullStream) {
-  if (chunk.type === "text-delta") process.stdout.write(chunk.text)
+  if (chunk.type === "text-delta") process.stdout.write(chunk.delta)
 }
 ```
 
@@ -96,8 +96,8 @@ import { cruelProvider } from "cruel/ai-sdk"
 const chaos = cruelProvider(openai, { rateLimit: 0.1 })
 
 chaos("gpt-4o")                              // language model
-chaos.embedding("text-embedding-3-small")    // embedding model
-chaos.image("dall-e-3")                      // image model
+chaos.embeddingModel("text-embedding-3-small") // embedding model
+chaos.imageModel("dall-e-3")                   // image model
 ```
 
 ## run the examples

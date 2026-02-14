@@ -57,7 +57,7 @@ const result = streamText({
 
 for await (const chunk of result.fullStream) {
   if (chunk.type === "text-delta") {
-    process.stdout.write(chunk.text)
+    process.stdout.write(chunk.delta)
   }
 }
 ```
@@ -93,23 +93,26 @@ const result = await generateText({
 ```ts
 import { gateway } from "@ai-sdk/gateway"
 import { generateText, stepCountIs, tool } from "ai"
-import { cruelModel } from "cruel/ai-sdk"
+import { cruelModel, cruelTools } from "cruel/ai-sdk"
 import { z } from "zod"
 
 const model = cruelModel(gateway("openai/gpt-4o"), {
   rateLimit: 0.1,
+})
+
+const tools = cruelTools({
+  weather: tool({
+    description: "get weather",
+    inputSchema: z.object({ city: z.string() }),
+    execute: async ({ city }) => `${city}: sunny`,
+  }),
+}, {
   toolFailure: 0.2,
 })
 
 const result = await generateText({
   model,
-  tools: {
-    weather: tool({
-      description: "get weather",
-      inputSchema: z.object({ city: z.string() }),
-      execute: async ({ city }) => `${city}: sunny`,
-    }),
-  },
+  tools,
   stopWhen: stepCountIs(5),
   prompt: "what's the weather in tokyo?",
 })
