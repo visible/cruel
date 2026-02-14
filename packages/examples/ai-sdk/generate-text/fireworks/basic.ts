@@ -1,0 +1,22 @@
+import { fireworks } from "@ai-sdk/fireworks"
+import { generateText } from "ai"
+import { cruelModel } from "cruel/ai-sdk"
+import { log } from "../../../lib/chaos"
+import { print } from "../../../lib/print"
+import { run } from "../../../lib/run"
+
+run(async () => {
+	const model = cruelModel(fireworks("accounts/fireworks/models/llama-v3p1-405b-instruct"), {
+		rateLimit: 0.2,
+		delay: [100, 500],
+		onChaos: log,
+	})
+
+	const result = await generateText({
+		model,
+		prompt: "Explain what makes a good API design.",
+	})
+
+	print("text:", result.text)
+	print("usage:", result.usage)
+})
