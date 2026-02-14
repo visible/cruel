@@ -29,6 +29,7 @@ run(async () => {
 		},
 		stopWhen: stepCountIs(8),
 		prompt: "Search for the latest AI news and summarize it.",
+		maxRetries: 3,
 	})
 
 	print("text:", result.text)
