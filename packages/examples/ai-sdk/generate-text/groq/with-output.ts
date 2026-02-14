@@ -7,7 +7,7 @@ import { print } from "../../../lib/print"
 import { run } from "../../../lib/run"
 
 run(async () => {
-	const model = cruelModel(groq("llama-3.1-8b-instant"), {
+	const model = cruelModel(groq("llama-3.3-70b-versatile"), {
 		partialResponse: 0.3,
 		delay: [200, 1000],
 		onChaos: log,
