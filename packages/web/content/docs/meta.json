@@ -1,4 +1,14 @@
 {
 	"title": "docs",
-	"pages": ["index", "chaos", "aisdk", "gateway", "resilience", "advanced", "reference", "tooling"]
+	"pages": [
+		"index",
+		"core",
+		"chaos",
+		"aisdk",
+		"gateway",
+		"resilience",
+		"advanced",
+		"reference",
+		"tooling"
+	]
 }

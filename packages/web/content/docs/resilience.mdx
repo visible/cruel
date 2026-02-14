@@ -26,7 +26,7 @@ const api = cruel.retry(fetch, {
   backoff: "exponential",
   maxDelay: 10000,
   onRetry: (attempt, error) => console.log(`retry ${attempt}`),
-  retryIf: (error) => error.status !== 404,
+  retryIf: (error) => (error as { statusCode?: number }).statusCode !== 404,
 })
 ```
 
