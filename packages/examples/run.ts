@@ -53,7 +53,9 @@ if (matches.length === 0) {
 	process.exit(1)
 }
 
-console.log(`\n  ${cyan}\u25b8${reset} ${matches.length} examples matching "${filters.join(" ")}"\n`)
+console.log(
+	`\n  ${cyan}\u25b8${reset} ${matches.length} examples matching "${filters.join(" ")}"\n`,
+)
 
 for (const file of matches) {
 	const rel = relative(root, file)
