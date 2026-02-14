@@ -197,3 +197,77 @@ const model = cruelModel(openai("gpt-4o"), {
 ```
 
 event types: `rateLimit`, `overloaded`, `contextLength`, `contentFilter`, `modelUnavailable`, `invalidApiKey`, `quotaExceeded`, `emptyResponse`, `fail`, `timeout`, `delay`, `streamCut`, `slowTokens`, `corruptChunk`, `partialResponse`, `toolFailure`, `toolTimeout`
+
+## diagnostics
+
+programmatic chaos reporting for test suites. track events, record results, compute stats, print reports
+
+```ts
+import { cruelModel, diagnostics } from "cruel/ai-sdk"
+
+const ctx = diagnostics.context()
+
+const model = cruelModel(openai("gpt-4o"), {
+  rateLimit: 0.3,
+  delay: [100, 500],
+  onChaos: diagnostics.tracker(ctx),
+})
+
+for (let i = 1; i <= 10; i++) {
+  diagnostics.before(ctx, i)
+  const start = performance.now()
+  try {
+    const result = await generateText({ model, prompt: "test", maxRetries: 2 })
+    diagnostics.success(ctx, i, Math.round(performance.now() - start), result.text)
+  } catch (e) {
+    diagnostics.failure(ctx, i, Math.round(performance.now() - start), e)
+  }
+}
+
+diagnostics.print(ctx)
+```
+
+### raw stats for assertions
+
+```ts
+const s = diagnostics.stats(ctx)
+
+s.total          // number of requests
+s.succeeded      // number of successes
+s.failed         // number of failures
+s.successRate    // 0-1
+s.duration       // total ms
+s.totalEvents    // number of chaos events
+s.events         // [{ type, count, percent }]
+s.errors         // failed requests with status, retryable, event chain
+s.requests       // all requests with events
+s.latency.success // { avg, p50, p99, min, max }
+s.latency.failure // { avg, p50, p99, min, max }
+```
+
+### use in tests
+
+```ts
+test("survives 30% rate limits", async () => {
+  const ctx = diagnostics.context()
+  const model = cruelModel(openai("gpt-4o"), {
+    rateLimit: 0.3,
+    onChaos: diagnostics.tracker(ctx),
+  })
+
+  for (let i = 1; i <= 20; i++) {
+    diagnostics.before(ctx, i)
+    const start = performance.now()
+    try {
+      await generateText({ model, prompt: "test", maxRetries: 2 })
+      diagnostics.success(ctx, i, Math.round(performance.now() - start), "ok")
+    } catch (e) {
+      diagnostics.failure(ctx, i, Math.round(performance.now() - start), e)
+    }
+  }
+
+  const s = diagnostics.stats(ctx)
+  expect(s.successRate).toBeGreaterThan(0.5)
+  expect(s.latency.success.p99).toBeLessThan(5000)
+})
+```
