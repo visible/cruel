@@ -6,7 +6,7 @@ import { print } from "../../../lib/print"
 import { run } from "../../../lib/run"
 
 run(async () => {
-	const model = cruelEmbeddingModel(vertex.embedding("text-embedding-004"), {
+	const model = cruelEmbeddingModel(vertex.embeddingModel("text-embedding-004"), {
 		rateLimit: 0.4,
 		overloaded: 0.2,
 		delay: [200, 1000],

@@ -15,7 +15,7 @@ run(async () => {
 	const result = await generateText({
 		model,
 		tools: {
-			google_search: google.tools.googleSearch(),
+			google_search: google.tools.googleSearch({}),
 		},
 		prompt: "What are the latest developments in quantum computing?",
 	})
