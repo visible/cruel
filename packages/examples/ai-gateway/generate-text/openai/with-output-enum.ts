@@ -14,7 +14,7 @@ run(async () => {
 
   const result = await generateText({
     model,
-    output: Output.enum({ members: ["positive", "negative", "neutral"] }),
+    output: Output.choice({ options: ["positive", "negative", "neutral"] }),
     prompt: "Classify the sentiment: I love this product!",
   })
 
