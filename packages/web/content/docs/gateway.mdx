@@ -1,0 +1,185 @@
+---
+title: ai gateway
+description: chaos testing through the vercel ai gateway
+---
+
+cruel works with `@ai-sdk/gateway` to test how your app handles failures when routing through the vercel ai gateway. the gateway lets you use any provider through a single interface - cruel injects chaos at the model layer so it works identically regardless of which provider the gateway routes to.
+
+## basic usage
+
+```ts
+import { gateway } from "@ai-sdk/gateway"
+import { generateText } from "ai"
+import { cruelModel } from "cruel/ai-sdk"
+
+const model = cruelModel(gateway("openai/gpt-4o"), {
+  rateLimit: 0.2,
+  overloaded: 0.1,
+  delay: [100, 500],
+})
+
+const result = await generateText({
+  model,
+  prompt: "hello",
+})
+```
+
+## any provider
+
+the gateway uses `provider/model` format. cruel wraps the gateway model the same way it wraps any ai sdk model:
+
+```ts
+cruelModel(gateway("openai/gpt-4o"), opts)
+cruelModel(gateway("anthropic/claude-sonnet-4-5-20250929"), opts)
+cruelModel(gateway("google/gemini-2.5-flash"), opts)
+cruelModel(gateway("mistral/mistral-large-latest"), opts)
+cruelModel(gateway("xai/grok-3-fast"), opts)
+cruelModel(gateway("deepseek/deepseek-chat"), opts)
+```
+
+## streaming
+
+```ts
+import { gateway } from "@ai-sdk/gateway"
+import { streamText } from "ai"
+import { cruelModel } from "cruel/ai-sdk"
+
+const model = cruelModel(gateway("anthropic/claude-sonnet-4-5-20250929"), {
+  slowTokens: [30, 150],
+  streamCut: 0.08,
+  corruptChunks: 0.02,
+})
+
+const result = streamText({
+  model,
+  prompt: "explain quantum computing",
+})
+
+for await (const chunk of result.fullStream) {
+  if (chunk.type === "text-delta") {
+    process.stdout.write(chunk.text)
+  }
+}
+```
+
+## structured output
+
+```ts
+import { gateway } from "@ai-sdk/gateway"
+import { Output, generateText } from "ai"
+import { cruelModel } from "cruel/ai-sdk"
+import { z } from "zod"
+
+const model = cruelModel(gateway("openai/gpt-4o"), {
+  partialResponse: 0.3,
+  delay: [200, 1000],
+})
+
+const result = await generateText({
+  model,
+  output: Output.object({
+    schema: z.object({
+      name: z.string(),
+      ingredients: z.array(z.string()),
+      steps: z.array(z.string()),
+    }),
+  }),
+  prompt: "generate a pancake recipe",
+})
+```
+
+## tool calling
+
+```ts
+import { gateway } from "@ai-sdk/gateway"
+import { generateText, stepCountIs, tool } from "ai"
+import { cruelModel } from "cruel/ai-sdk"
+import { z } from "zod"
+
+const model = cruelModel(gateway("openai/gpt-4o"), {
+  rateLimit: 0.1,
+  toolFailure: 0.2,
+})
+
+const result = await generateText({
+  model,
+  tools: {
+    weather: tool({
+      description: "get weather",
+      inputSchema: z.object({ city: z.string() }),
+      execute: async ({ city }) => `${city}: sunny`,
+    }),
+  },
+  stopWhen: stepCountIs(5),
+  prompt: "what's the weather in tokyo?",
+})
+```
+
+## embeddings
+
+```ts
+import { gateway } from "@ai-sdk/gateway"
+import { embed } from "ai"
+import { cruelEmbeddingModel } from "cruel/ai-sdk"
+
+const model = cruelEmbeddingModel(
+  gateway.embeddingModel("openai/text-embedding-3-small"),
+  { rateLimit: 0.2, delay: [50, 200] },
+)
+
+const { embedding } = await embed({ model, value: "hello" })
+```
+
+## fallback pattern
+
+test what happens when a provider fails and you need to fall back:
+
+```ts
+import { gateway } from "@ai-sdk/gateway"
+import { generateText } from "ai"
+import { cruelModel } from "cruel/ai-sdk"
+
+const primary = cruelModel(gateway("google/gemini-2.5-flash"), {
+  rateLimit: 1,
+})
+
+const fallback = gateway("anthropic/claude-sonnet-4-5-20250929")
+
+try {
+  const result = await generateText({
+    model: primary,
+    prompt: "hello",
+  })
+} catch {
+  const result = await generateText({
+    model: fallback,
+    prompt: "hello",
+  })
+}
+```
+
+## multi-provider comparison
+
+test the same prompt across multiple gateway providers under chaos:
+
+```ts
+import { gateway } from "@ai-sdk/gateway"
+import { generateText } from "ai"
+import { cruelModel } from "cruel/ai-sdk"
+
+const providers = [
+  "openai/gpt-4o",
+  "anthropic/claude-sonnet-4-5-20250929",
+  "google/gemini-2.5-flash",
+]
+
+const results = await Promise.allSettled(
+  providers.map(async (id) => {
+    const model = cruelModel(gateway(id), {
+      rateLimit: 0.2,
+      delay: [100, 800],
+    })
+    return generateText({ model, prompt: "hello", maxRetries: 2 })
+  }),
+)
+```

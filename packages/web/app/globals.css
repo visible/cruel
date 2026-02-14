@@ -1,0 +1,71 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+@theme {
+	--font-mono: "Geist Mono", ui-monospace, monospace;
+}
+
+:root,
+.dark {
+	--docs-pad: 6px;
+	--panel-radius: 16px;
+
+	--color-fd-background: #0a0a0a;
+	--color-fd-foreground: #d9d9d9;
+	--color-fd-muted: #111111;
+	--color-fd-muted-foreground: rgba(255, 255, 255, 0.5);
+	--color-fd-popover: #0e0e0e;
+	--color-fd-popover-foreground: #d9d9d9;
+	--color-fd-card: #0e0e0e;
+	--color-fd-card-foreground: #e6e6e6;
+	--color-fd-border: rgba(255, 255, 255, 0.07);
+	--color-fd-primary: #f0f0f0;
+	--color-fd-primary-foreground: #0a0a0a;
+	--color-fd-secondary: #141414;
+	--color-fd-secondary-foreground: #d9d9d9;
+	--color-fd-accent: rgba(255, 255, 255, 0.05);
+	--color-fd-accent-foreground: #d9d9d9;
+	--color-fd-ring: rgba(255, 255, 255, 0.2);
+	--color-fd-overlay: rgba(0, 0, 0, 0.5);
+
+	--stage: #f5f3ef;
+	--panel-bg: #0a0a0a;
+	--panel-border: rgba(255, 255, 255, 0.1);
+	--panel-frame: rgba(255, 255, 255, 0.06);
+	--panel-text: #e6e6e6;
+	--panel-muted: rgba(255, 255, 255, 0.4);
+	--panel-dim: rgba(255, 255, 255, 0.2);
+	--panel-faint: rgba(255, 255, 255, 0.06);
+}
+
+@media (min-width: 640px) {
+	:root {
+		--docs-pad: 16px;
+		--panel-radius: 22px;
+	}
+}
+
+::selection {
+	background: #f0f0f0;
+	color: #0a0a0a;
+}
+
+.grain::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAP0lEQVR4nO3QoQkAIBAEwZ//aQ0YzZzJq8M0p7oJ9A8jzq0AAACAvw9Yx0n4Kkq6qgAAAAAAAAAAAPw4b8m8wN8bK9yS8yZ0bA9x5wAAc2u7oQAAAABJRU5ErkJggg==");
+	mix-blend-mode: overlay;
+	opacity: 0.06;
+}
+
+.panel-bg {
+	background:
+		radial-gradient(120% 120% at 5% 8%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+		radial-gradient(100% 100% at 85% 15%, rgba(180, 120, 120, 0.04) 0%, transparent 45%),
+		radial-gradient(120% 120% at 20% 80%, rgba(100, 100, 140, 0.04) 0%, transparent 50%),
+		radial-gradient(140% 120% at 90% 90%, rgba(140, 100, 100, 0.03) 0%, transparent 55%);
+	background-color: #0a0a0a;
+}

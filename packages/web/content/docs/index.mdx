@@ -1,0 +1,45 @@
+---
+title: getting started
+description: chaos testing with zero mercy
+---
+
+a chaos engineering library for testing resilience. inject failures, latency, timeouts into any function. works with fetch, ai sdks, databases, anything async.
+
+## install
+
+```bash
+bun add cruel
+```
+
+```bash
+npm install cruel
+```
+
+```bash
+pnpm add cruel
+```
+
+## quick start
+
+```ts
+import { cruel } from "cruel"
+
+const api = cruel(fetch, {
+  fail: 0.1,
+  delay: [100, 500],
+  timeout: 0.05,
+})
+
+const res = await api("https://api.example.com")
+```
+
+## shorthand helpers
+
+```ts
+cruel.fail(fn, 0.1)      // 10% failures
+cruel.slow(fn, 500)       // add 500ms delay
+cruel.timeout(fn, 0.1)    // 10% never resolve
+cruel.flaky(fn)            // random chaos
+cruel.unreliable(fn)       // more chaos
+cruel.nightmare(fn)        // maximum chaos
+```

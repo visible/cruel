@@ -1,0 +1,67 @@
+---
+title: tooling
+description: utilities, cli, testing, and error types
+---
+
+## utilities
+
+```ts
+cruel.coin(0.5)
+cruel.pick([1, 2, 3])
+cruel.between(10, 100)
+cruel.maybe(value, 0.5)
+await cruel.delay(500)
+```
+
+## stats
+
+```ts
+cruel.stats()
+cruel.resetStats()
+```
+
+## deterministic mode
+
+```ts
+cruel.seed(12345)
+cruel.coin(0.5) // same result every time
+```
+
+## cli
+
+```bash
+cruel test https://api.example.com --fail 0.1 --count 20
+cruel test https://api.example.com --preset nightmare
+cruel scenario outage --duration 5000
+cruel presets
+```
+
+## testing
+
+```ts
+import { describe, test, beforeEach } from "bun:test"
+import { cruel } from "cruel"
+
+beforeEach(() => {
+  cruel.reset()
+  cruel.seed(12345)
+})
+
+test("handles failures", async () => {
+  cruel.enable({ fail: 1 })
+  await expect(api()).rejects.toThrow()
+})
+```
+
+## error types
+
+```ts
+import {
+  CruelError,
+  CruelTimeoutError,
+  CruelNetworkError,
+  CruelHttpError,
+  CruelRateLimitError,
+  CruelAIError,
+} from "cruel"
+```
