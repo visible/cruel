@@ -2,6 +2,7 @@
 
 examples live in `packages/examples/` and are split into two categories:
 
+- `core/` - no-key core api examples for quick onboarding
 - `ai-sdk/` - direct provider usage (`@ai-sdk/openai`, `@ai-sdk/anthropic`, etc.)
 - `ai-gateway/` - vercel ai gateway (`@ai-sdk/gateway`)
 
@@ -11,6 +12,10 @@ examples are organized by function, then by provider:
 
 ```
 packages/examples/
+├── core/
+│   ├── basic.ts
+│   ├── resilience.ts
+│   └── control.ts
 ├── ai-sdk/
 │   ├── generate-text/
 │   │   ├── openai/
@@ -62,6 +67,8 @@ packages/examples/
 ```
 
 ## example types
+
+core examples should always run with no env vars or api keys.
 
 every provider folder should have at minimum:
 
@@ -146,6 +153,7 @@ cd packages/examples
 bun run examples:ai-sdk:openai        # all openai ai-sdk examples
 bun run examples:ai-gateway:anthropic  # all anthropic gateway examples
 bun run examples:heavy                 # all stress tests
+bun run examples:core                  # no-key core api examples
 
 bun run run.ts google                  # custom filter
 bun run run.ts stream-text             # all stream-text examples

@@ -5,9 +5,14 @@
 		"packages/*"
 	],
 	"scripts": {
+		"lint": "bunx biome check .",
+		"typecheck": "bun run --filter cruel typecheck && bun run --filter @cruel/web typecheck",
 		"build": "bun run --filter cruel build",
 		"build:web": "bun run --filter @cruel/web build",
 		"dev": "bun run --filter @cruel/web dev",
-		"test": "bun run --filter cruel test"
+		"test": "bun run --filter cruel test",
+		"check:docs": "bun run build:web",
+		"check:users": "cd packages/examples && bun run run.ts core",
+		"qa": "bun run lint && bun run typecheck && bun run build && bun run test && bun run check:docs && bun run check:users"
 	}
 }
