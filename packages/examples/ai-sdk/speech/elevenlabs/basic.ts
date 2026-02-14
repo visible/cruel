@@ -17,5 +17,5 @@ run(async () => {
 		text: "Hello, this is a test of chaos engineering for speech synthesis.",
 	})
 
-	print("audio length:", result.audio.length)
+	print("audio length:", result.audio.uint8Array.length)
 })

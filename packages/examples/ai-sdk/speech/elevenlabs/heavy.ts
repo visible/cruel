@@ -20,7 +20,7 @@ run(async () => {
 				model,
 				text: `Request ${i + 1}: Testing speech under chaos.`,
 			})
-			print(`[${i + 1}] ok:`, `${result.audio.length} bytes`)
+			print(`[${i + 1}] ok:`, `${result.audio.uint8Array.length} bytes`)
 		} catch (e) {
 			print(`[${i + 1}] fail:`, (e as Error).message)
 		}
