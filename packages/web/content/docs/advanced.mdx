@@ -90,3 +90,14 @@ cruel.intercept(/api\.anthropic\.com/, {
 
 cruel.unpatchFetch()
 ```
+
+## production rollout checklist
+
+for production-like chaos drills, keep blast radius controlled:
+
+1. start with low rates (`0.01` - `0.05`) and increase gradually
+2. run chaos in a scoped block or dedicated test path first
+3. attach `onChaos` and record event types, model ids, and latency
+4. keep retry, fallback, and circuit-breaker logic enabled during tests
+5. run deterministic passes with `cruel.seed(...)` before random passes
+6. stop chaos immediately if error budget or latency thresholds are exceeded

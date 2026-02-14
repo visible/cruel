@@ -120,6 +120,17 @@ const tool = cruelTool(myTool, { toolFailure: 0.2 })
 const tools = cruelTools({ search, calc }, { toolFailure: 0.1 })
 ```
 
+## model id override
+
+if `MODEL` is set in the environment, cruel swaps the model id used by wrappers:
+
+```bash
+MODEL=gpt-6 bun run your-script.ts
+```
+
+- `gpt-4o` -> `gpt-6`
+- `openai/gpt-4o` -> `openai/gpt-6`
+
 ## chaos options
 
 all options are probabilities between 0 and 1 (0 = never, 1 = always)
