@@ -153,17 +153,3 @@ const model = cruelImageModel(openai.image("dall-e-3"), {
 const { images } = await generateImage({ model, prompt: "a cat" })
 ```
 
-## model override
-
-set the `MODEL` env var to swap the model at runtime without changing code. useful for testing new models against existing chaos configurations
-
-```bash
-MODEL=gpt-5 bun run examples/ai-sdk/generate-text/openai/basic.ts
-```
-
-for gateway models, the provider prefix is preserved:
-
-```bash
-# openai/gpt-4o -> openai/gpt-5
-MODEL=gpt-5 bun run examples/ai-gateway/generate-text/openai/basic.ts
-```
