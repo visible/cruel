@@ -5,6 +5,8 @@ const red = "\x1b[31m"
 const dim = "\x1b[2m"
 const reset = "\x1b[0m"
 
+process.on("unhandledRejection", () => {})
+
 export function run(fn: () => Promise<void>) {
 	const start = performance.now()
 	fn()
@@ -19,9 +21,6 @@ export function run(fn: () => Promise<void>) {
 			if (APICallError.isInstance(error)) {
 				console.log(`  ${dim}status${reset}  ${error.statusCode}`)
 				console.log(`  ${dim}retry${reset}   ${error.isRetryable}`)
-				if (error.responseBody) {
-					console.log(`  ${dim}body${reset}    ${typeof error.responseBody === "string" ? error.responseBody.slice(0, 200) : error.responseBody}`)
-				}
 			}
 			console.log(`\n  ${dim}\u2500 ${ms}ms${reset}`)
 		})
