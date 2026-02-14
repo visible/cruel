@@ -1,9 +1,6 @@
 import "dotenv/config"
 import { APICallError } from "ai"
-
-const red = "\x1b[31m"
-const dim = "\x1b[2m"
-const reset = "\x1b[0m"
+import { dim, red, reset } from "./colors"
 
 process.on("unhandledRejection", () => {})
 

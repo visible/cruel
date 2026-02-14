@@ -1,11 +1,5 @@
 import type { ChaosEvent } from "cruel/ai-sdk"
-
-const dim = "\x1b[2m"
-const red = "\x1b[31m"
-const yellow = "\x1b[33m"
-const cyan = "\x1b[36m"
-const magenta = "\x1b[35m"
-const reset = "\x1b[0m"
+import { dim, red, yellow, cyan, magenta, reset } from "./colors"
 
 const icons: Record<string, string> = {
 	rateLimit: `${red}\u2717${reset}`,

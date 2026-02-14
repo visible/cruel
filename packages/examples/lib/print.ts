@@ -1,6 +1,4 @@
-const dim = "\x1b[2m"
-const cyan = "\x1b[36m"
-const reset = "\x1b[0m"
+import { dim, cyan, reset } from "./colors"
 
 function clean(value: unknown): unknown {
 	if (value == null || typeof value !== "object") return value
