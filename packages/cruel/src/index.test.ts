@@ -479,6 +479,12 @@ describe("cruel.circuitBreaker", () => {
 		expect(cb.getState().state).toBe("closed")
 	})
 
+	test("throws on invalid options", () => {
+		const fn = async () => "ok"
+		expect(() => cruel.circuitBreaker(fn, { threshold: 0, timeout: 1000 })).toThrow(CruelError)
+		expect(() => cruel.circuitBreaker(fn, { threshold: 1, timeout: 0 })).toThrow(CruelError)
+	})
+
 	test("opens after threshold failures", async () => {
 		let _calls = 0
 		const fn = async () => {
@@ -524,9 +530,49 @@ describe("cruel.circuitBreaker", () => {
 		cb.reset()
 		expect(cb.getState().state).toBe("closed")
 	})
+
+	test("resets failure count after success", async () => {
+		let fail = true
+		const fn = async () => {
+			if (fail) throw new Error("fail")
+			return "ok"
+		}
+		const cb = cruel.circuitBreaker(fn, { threshold: 2, timeout: 1000 })
+
+		await expect(cb()).rejects.toThrow("fail")
+		expect(cb.getState().failures).toBe(1)
+		fail = false
+		await expect(cb()).resolves.toBe("ok")
+		expect(cb.getState().failures).toBe(0)
+		fail = true
+		await expect(cb()).rejects.toThrow("fail")
+		expect(cb.getState().state).toBe("closed")
+	})
+
+	test("reopens from half-open after a single failure", async () => {
+		const fn = async () => {
+			throw new Error("fail")
+		}
+		const cb = cruel.circuitBreaker(fn, { threshold: 3, timeout: 20 })
+
+		await expect(cb()).rejects.toThrow("fail")
+		await expect(cb()).rejects.toThrow("fail")
+		await expect(cb()).rejects.toThrow("fail")
+		expect(cb.getState().state).toBe("open")
+
+		await new Promise((r) => setTimeout(r, 30))
+		await expect(cb()).rejects.toThrow("fail")
+		expect(cb.getState().state).toBe("open")
+	})
 })
 
 describe("cruel.retry", () => {
+	test("throws on invalid attempts", () => {
+		const fn = async () => "ok"
+		expect(() => cruel.retry(fn, { attempts: 0 })).toThrow(CruelError)
+		expect(() => cruel.retry(fn, { attempts: -1 })).toThrow(CruelError)
+	})
+
 	test("retries on failure", async () => {
 		let attempts = 0
 		const fn = async () => {
@@ -629,6 +675,11 @@ describe("cruel.bulkhead", () => {
 })
 
 describe("cruel.withTimeout", () => {
+	test("throws on invalid timeout value", () => {
+		const fn = async () => "ok"
+		expect(() => cruel.withTimeout(fn, { ms: 0 })).toThrow(CruelError)
+	})
+
 	test("resolves before timeout", async () => {
 		const fn = async () => {
 			await new Promise((r) => setTimeout(r, 10))

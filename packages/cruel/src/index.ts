@@ -206,7 +206,11 @@ function chance(rate: number | undefined): boolean {
 
 function sleep(ms: number): Promise<void> {
 	return new Promise((r) => {
-		const t = setTimeout(r, ms)
+		const t = setTimeout(() => {
+			const i = state.timers.indexOf(t)
+			if (i !== -1) state.timers.splice(i, 1)
+			r()
+		}, ms)
 		state.timers.push(t)
 	})
 }
@@ -923,6 +927,21 @@ function createCircuitBreaker<T extends AnyFn>(
 	fn: T,
 	options: CircuitBreakerOptions,
 ): T & { getState: () => CircuitBreakerState; reset: () => void } {
+	const threshold = Number.isFinite(options.threshold) ? Math.floor(options.threshold) : 0
+	const timeout = Number.isFinite(options.timeout) ? Math.floor(options.timeout) : 0
+	if (threshold < 1) {
+		throw new CruelError(
+			"cruel: circuit breaker threshold must be at least 1",
+			"CRUEL_INVALID_CIRCUIT_THRESHOLD",
+		)
+	}
+	if (timeout < 1) {
+		throw new CruelError(
+			"cruel: circuit breaker timeout must be at least 1",
+			"CRUEL_INVALID_CIRCUIT_TIMEOUT",
+		)
+	}
+
 	const cbState: CircuitBreakerState = {
 		failures: 0,
 		state: "closed",
@@ -931,7 +950,7 @@ function createCircuitBreaker<T extends AnyFn>(
 
 	const wrapped = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
 		if (cbState.state === "open") {
-			if (Date.now() - cbState.lastFailure > options.timeout) {
+			if (Date.now() - cbState.lastFailure > timeout) {
 				cbState.state = "half-open"
 				options.onHalfOpen?.()
 			} else {
@@ -945,12 +964,14 @@ function createCircuitBreaker<T extends AnyFn>(
 				cbState.state = "closed"
 				cbState.failures = 0
 				options.onClose?.()
+			} else if (cbState.failures > 0) {
+				cbState.failures = 0
 			}
 			return result as ReturnType<T>
 		} catch (e) {
 			cbState.failures++
 			cbState.lastFailure = Date.now()
-			if (cbState.failures >= options.threshold) {
+			if (cbState.state === "half-open" || cbState.failures >= threshold) {
 				cbState.state = "open"
 				options.onOpen?.()
 			}
@@ -979,9 +1000,14 @@ interface RetryOptions {
 }
 
 function withRetry<T extends AnyFn>(fn: T, options: RetryOptions): T {
+	const attempts = Number.isFinite(options.attempts) ? Math.floor(options.attempts) : 0
+	if (attempts < 1) {
+		throw new CruelError("cruel: retry attempts must be at least 1", "CRUEL_INVALID_RETRY_ATTEMPTS")
+	}
+
 	const wrapped = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
 		let lastError: Error | undefined
-		for (let attempt = 1; attempt <= options.attempts; attempt++) {
+		for (let attempt = 1; attempt <= attempts; attempt++) {
 			try {
 				return (await fn(...args)) as ReturnType<T>
 			} catch (e) {
@@ -989,7 +1015,7 @@ function withRetry<T extends AnyFn>(fn: T, options: RetryOptions): T {
 				if (options.retryIf && !options.retryIf(lastError)) {
 					throw lastError
 				}
-				if (attempt < options.attempts) {
+				if (attempt < attempts) {
 					options.onRetry?.(attempt, lastError)
 					let delay = getDelay(options.delay ?? 1000)
 					if (options.backoff === "linear") {
@@ -1072,16 +1098,35 @@ interface TimeoutOptions {
 }
 
 function withTimeout<T extends AnyFn>(fn: T, options: TimeoutOptions): T {
+	const ms = Number.isFinite(options.ms) ? Math.floor(options.ms) : 0
+	if (ms < 1) {
+		throw new CruelError("cruel: timeout ms must be at least 1", "CRUEL_INVALID_TIMEOUT_MS")
+	}
+
 	const wrapped = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
-		return Promise.race([
-			fn(...args) as Promise<ReturnType<T>>,
-			new Promise<never>((_, reject) => {
-				setTimeout(() => {
-					options.onTimeout?.()
-					reject(new CruelTimeoutError())
-				}, options.ms)
-			}),
-		])
+		return new Promise<ReturnType<T>>((resolve, reject) => {
+			let settled = false
+			const timer = setTimeout(() => {
+				if (settled) return
+				settled = true
+				options.onTimeout?.()
+				reject(new CruelTimeoutError())
+			}, ms)
+
+			Promise.resolve(fn(...args) as Promise<ReturnType<T>>)
+				.then((result) => {
+					if (settled) return
+					settled = true
+					clearTimeout(timer)
+					resolve(result)
+				})
+				.catch((error) => {
+					if (settled) return
+					settled = true
+					clearTimeout(timer)
+					reject(error)
+				})
+		})
 	}
 	return wrapped as T
 }
