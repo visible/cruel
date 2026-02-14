@@ -1,5 +1,5 @@
 import { openai } from "@ai-sdk/openai"
-import { generateSpeech } from "ai"
+import { experimental_generateSpeech as generateSpeech } from "ai"
 import { cruelSpeechModel } from "cruel/ai-sdk"
 import { log } from "../../../lib/chaos"
 import { print } from "../../../lib/print"

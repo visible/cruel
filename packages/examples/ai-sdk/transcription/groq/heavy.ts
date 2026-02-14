@@ -1,5 +1,5 @@
 import { groq } from "@ai-sdk/groq"
-import { transcribe } from "ai"
+import { experimental_transcribe as transcribe } from "ai"
 import { cruelTranscriptionModel } from "cruel/ai-sdk"
 import { log } from "../../../lib/chaos"
 import { print } from "../../../lib/print"
