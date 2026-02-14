@@ -24,18 +24,11 @@ run(async () => {
 				model,
 				prompt: `Request ${i + 1}: Write a haiku.`,
 			})
-
-			for await (const chunk of result.fullStream) {
-				if (chunk.type === "text-delta") {
-					process.stdout.write(chunk.text)
-				}
-				if (chunk.type === "error") {
-					console.error("\nerror:", chunk.error)
-				}
-			}
+			const text = await result.text
+			if (text) process.stdout.write(text)
 			console.log()
 		} catch (e) {
-			console.log("failed:", (e as Error).message)
+			console.log(`failed: ${(e as Error).message}`)
 		}
 	}
 })
