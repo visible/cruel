@@ -25,6 +25,7 @@ export function Anchor() {
 		function mark(link: HTMLAnchorElement) {
 			const icon = link.nextElementSibling
 			if (!(icon instanceof SVGSVGElement)) return
+			const heading = link.parentElement
 
 			const current = icons.get(icon) ?? icon.innerHTML
 			if (!icons.has(icon)) icons.set(icon, current)
@@ -34,9 +35,31 @@ export function Anchor() {
 				'<path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>'
 
 			const timer = window.setTimeout(() => {
+				let reveal = false
+				if (heading instanceof HTMLElement) {
+					const rect = heading.getBoundingClientRect()
+					const visible =
+						rect.bottom > 0 &&
+						rect.top < window.innerHeight &&
+						rect.right > 0 &&
+						rect.left < window.innerWidth
+					reveal = visible && heading.matches(":hover")
+					if (!reveal) heading.dataset.lock = "true"
+				}
+
 				const value = icons.get(icon)
 				if (value) icon.innerHTML = value
 				delete link.dataset.copied
+
+				if (heading instanceof HTMLElement && !reveal) {
+					heading.addEventListener(
+						"pointerenter",
+						() => {
+							delete heading.dataset.lock
+						},
+						{ once: true },
+					)
+				}
 			}, 1200)
 
 			const previous = timers.get(link)

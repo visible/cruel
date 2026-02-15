@@ -57,7 +57,11 @@
 	color: rgba(255, 255, 255, 0.88);
 }
 
-.docs-panel .prose :is(h2, h3, h4, h5, h6):hover > svg {
+.docs-panel .prose :is(h2, h3, h4, h5, h6)[data-lock="true"] > svg {
+	opacity: 0 !important;
+}
+
+.docs-panel .prose :is(h2, h3, h4, h5, h6):hover:not([data-lock="true"]) > svg {
 	opacity: 1 !important;
 }
 
