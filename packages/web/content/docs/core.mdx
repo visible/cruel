@@ -36,6 +36,7 @@ type ChaosOptions = {
   delay?: number | [number, number]
   timeout?: number
   jitter?: number
+  corrupt?: number
   spike?: number | [number, number]
   enabled?: boolean
 }
@@ -45,6 +46,7 @@ type ChaosOptions = {
 - `delay`: fixed or random latency
 - `timeout`: chance to never resolve
 - `jitter`: extra random latency between `0` and `jitter`
+- `corrupt`: chance to corrupt string output
 - `spike`: occasional added latency
 - `enabled`: force-disable on a wrapper
 
@@ -68,6 +70,7 @@ cruel.network.latency(fn, [100, 500])
 cruel.network.packetLoss(fn, 0.1)
 cruel.network.disconnect(fn, 0.05)
 cruel.network.dns(fn, 0.02)
+cruel.network.bandwidth(fn, 256)
 cruel.network.slow(fn)
 cruel.network.unstable(fn)
 cruel.network.offline(fn)
@@ -93,6 +96,10 @@ cruel.stream.cut(fn, 0.1)
 cruel.stream.pause(fn, [200, 1000])
 cruel.stream.corrupt(fn, 0.1)
 cruel.stream.truncate(fn, 0.1)
+cruel.stream.reorder(fn, 0.1)
+cruel.stream.duplicate(fn, 0.1)
+cruel.stream.dropChunks(fn, 0.1)
+cruel.stream.corruptChunks(fn, 0.1)
 cruel.stream.slow(fn)
 cruel.stream.flaky(fn)
 ```
@@ -146,11 +153,16 @@ cruel.abort(fn, { signal })
 const wrapped = cruel.compose(fetcher, {
   retry: { attempts: 3, delay: 1000, backoff: "exponential" },
   circuitBreaker: { threshold: 5, timeout: 30000 },
+  timeoutMs: 5000,
   cache: { ttl: 10000 },
+  timeout: 0.05,
+  corrupt: 0.02,
   fail: 0.05,
   delay: [100, 300],
 })
 ```
+
+`timeoutMs` applies wrapper timeout in milliseconds. `timeout` remains chaos probability.
 
 ```ts
 cruel.wrap(fetcher).fail(0.1)
@@ -192,6 +204,10 @@ cruel.patchFetch()
 cruel.intercept("api.openai.com", {
   rateLimit: { rate: 0.1, retryAfter: 60 },
   delay: [100, 500],
+  slowBody: [100, 300],
+  headers: { "x-chaos": "true" },
+  truncate: 0.05,
+  malformed: 0.02,
 })
 
 cruel.unpatchFetch()

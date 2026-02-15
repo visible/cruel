@@ -152,6 +152,14 @@ describe("cruel.network", () => {
 		await expect(wrapped()).rejects.toThrow(CruelNetworkError)
 	})
 
+	test("bandwidth slows string responses", async () => {
+		const fn = async () => "x".repeat(32 * 1024)
+		const wrapped = cruel.network.bandwidth(fn, 256)
+		const start = Date.now()
+		await wrapped()
+		expect(Date.now() - start).toBeGreaterThanOrEqual(900)
+	})
+
 	test("offline always throws", async () => {
 		const fn = () => Promise.resolve(42)
 		const wrapped = cruel.network.offline(fn)
@@ -214,6 +222,29 @@ describe("cruel.stream", () => {
 		const wrapped = cruel.stream.truncate(fn, 1)
 		const result = await wrapped()
 		expect(result.length).toBeLessThan(33)
+	})
+
+	test("reorder shifts chunk order", async () => {
+		const fn = () => Promise.resolve("abcdefgh")
+		const wrapped = cruel.stream.reorder(fn, 1)
+		const result = await wrapped()
+		expect(result).toBe("efghabcd")
+	})
+
+	test("duplicate appends duplicated segment", async () => {
+		const fn = () => Promise.resolve("abcdefgh")
+		const wrapped = cruel.stream.duplicate(fn, 1)
+		const result = await wrapped()
+		expect(result.length).toBeGreaterThan(8)
+		expect(result.startsWith("abcdefgh")).toBe(true)
+	})
+
+	test("dropChunks removes a middle segment", async () => {
+		const fn = () => Promise.resolve("abcdefghij")
+		const wrapped = cruel.stream.dropChunks(fn, 1)
+		const result = await wrapped()
+		expect(result.length).toBeLessThan(10)
+		expect(result.startsWith("ab")).toBe(true)
 	})
 })
 
@@ -399,6 +430,21 @@ describe("cruel.patchFetch", () => {
 			const res = await fetch("https://example.com")
 			const text = await res.text()
 			expect(text.endsWith("{")).toBe(true)
+		} finally {
+			cruel.unpatchFetch()
+			globalThis.fetch = original
+		}
+	})
+
+	test("applies slowBody delay", async () => {
+		const original = globalThis.fetch
+		globalThis.fetch = async () => new Response("ok", { status: 200 })
+		try {
+			cruel.intercept("example.com", { slowBody: 50 })
+			cruel.patchFetch()
+			const start = Date.now()
+			await fetch("https://example.com")
+			expect(Date.now() - start).toBeGreaterThanOrEqual(45)
 		} finally {
 			cruel.unpatchFetch()
 			globalThis.fetch = original
