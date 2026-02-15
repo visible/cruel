@@ -1,6 +1,7 @@
 import { RootProvider } from "fumadocs-ui/provider/next"
 import { GeistMono } from "geist/font/mono"
 import type { Metadata, Viewport } from "next"
+import { Analytics } from "@vercel/analytics/react"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -52,6 +53,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 				>
 					{children}
 				</RootProvider>
+				<Analytics />
 			</body>
 		</html>
 	)

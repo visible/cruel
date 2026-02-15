@@ -10,16 +10,17 @@
 		"typecheck": "bun run source && tsc --noEmit"
 	},
 	"dependencies": {
+		"@orama/core": "1.2.18",
+		"@types/mdx": "2.0.13",
+		"@vercel/analytics": "^1.6.1",
 		"cruel": "workspace:*",
-		"next": "^16.0.0",
-		"react": "^19.0.0",
-		"react-dom": "^19.0.0",
-		"geist": "^1.4.0",
 		"fumadocs-core": "16.6.0",
 		"fumadocs-mdx": "14.2.7",
 		"fumadocs-ui": "16.6.0",
-		"@orama/core": "1.2.18",
-		"@types/mdx": "2.0.13"
+		"geist": "^1.4.0",
+		"next": "^16.0.0",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0"
 	},
 	"devDependencies": {
 		"@types/node": "^22.0.0",
