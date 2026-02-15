@@ -23,8 +23,7 @@
 	left: 20px !important;
 }
 
-.docs-panel [data-radix-scroll-area-viewport],
-.docs-panel [style] {
+.docs-panel [data-radix-scroll-area-viewport] {
 	mask-image: none !important;
 	-webkit-mask-image: none !important;
 }
@@ -33,6 +32,10 @@
 	.mask-\[linear-gradient\(to_bottom\,transparent\,white_16px\,white_calc\(100\%-16px\)\,transparent\)\] {
 	mask: none !important;
 	-webkit-mask: none !important;
+}
+
+.docs-panel #nd-toc [style*="--fd-top"] {
+	background: rgba(255, 255, 255, 0.22) !important;
 }
 
 [data-state="open"][class*="backdrop-blur"],
