@@ -38,7 +38,7 @@ export function Anchor() {
 			const timer = window.setTimeout(() => {
 				let reveal = false
 				if (heading instanceof HTMLElement) {
-						const frame = root.getBoundingClientRect()
+					const frame = root.getBoundingClientRect()
 					const rect = heading.getBoundingClientRect()
 					const visible =
 						rect.bottom > frame.top &&
