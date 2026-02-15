@@ -11,7 +11,9 @@ export default function Page() {
 
 				<div className="relative z-10 h-full flex flex-col p-10">
 					<div className="flex-1">
-						<div className="text-[11px] uppercase tracking-[0.3em] text-white/20">chaos engineering</div>
+						<div className="text-[11px] uppercase tracking-[0.3em] text-white/20">
+							chaos engineering
+						</div>
 						<h1 className="-ml-[10px] mt-5 text-[116px] leading-[0.85] tracking-[-0.06em] font-bold text-white/92">
 							cruel
 						</h1>
