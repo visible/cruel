@@ -1,78 +1,18 @@
 {
-  "name": "cruel",
-  "version": "1.0.1",
-  "description": "chaos testing with zero mercy",
-  "type": "module",
-  "sideEffects": false,
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "bin": {
-    "cruel": "./dist/cli.js"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    },
-    "./aisdk": {
-      "types": "./dist/aisdk.d.ts",
-      "import": "./dist/aisdk.js",
-      "require": "./dist/aisdk.cjs"
-    },
-    "./matchers": {
-      "types": "./dist/matchers.d.ts",
-      "import": "./dist/matchers.js",
-      "require": "./dist/matchers.cjs"
-    }
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "test": "bun test",
-    "prepublishOnly": "bun run build"
-  },
-  "keywords": [
-    "chaos",
-    "testing",
-    "fault-injection",
-    "resilience",
-    "reliability",
-    "chaos-engineering",
-    "failure",
-    "retry",
-    "timeout",
-    "latency",
-    "circuit-breaker",
-    "bulkhead",
-    "rate-limit",
-    "ai-sdk",
-    "openai",
-    "anthropic",
-    "llm",
-    "middleware",
-    "jest",
-    "vitest",
-    "mock",
-    "simulation"
-  ],
-  "engines": {
-    "node": ">=18"
-  },
-  "author": "Visible",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/visible/cruel"
-  },
-  "homepage": "https://github.com/visible/cruel",
-  "devDependencies": {
-    "@types/node": "^22.0.0",
-    "tsup": "^8.0.0",
-    "typescript": "^5.0.0"
-  }
+	"name": "cruel-workspace",
+	"private": true,
+	"workspaces": [
+		"packages/*"
+	],
+	"scripts": {
+		"lint": "bunx biome check .",
+		"typecheck": "bun run --filter cruel typecheck && bun run --filter @cruel/web typecheck",
+		"build": "bun run --filter cruel build",
+		"build:web": "bun run --filter @cruel/web build",
+		"dev": "bun run --filter @cruel/web dev",
+		"test": "bun run --filter cruel test",
+		"check:docs": "bun run build:web",
+		"check:users": "cd packages/examples && bun run run.ts core",
+		"qa": "bun run lint && bun run typecheck && bun run build && bun run test && bun run check:docs && bun run check:users"
+	}
 }

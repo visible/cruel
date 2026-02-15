@@ -1,0 +1,86 @@
+# examples
+
+```bash
+bun install
+```
+
+## run
+
+```bash
+# single example
+bun run ai-sdk/generate-text/openai/basic.ts
+
+# by provider
+bun run run.ts ai-sdk openai
+bun run run.ts ai-gateway anthropic
+bun run run.ts core
+
+# scoped
+bun run run.ts ai-gateway openai basic
+bun run run.ts ai-sdk stream-text groq
+
+# by type
+bun run run.ts heavy
+bun run run.ts with-tools
+bun run run.ts with-diagnostics
+
+# override model id for all matched examples
+bun run run.ts ai-sdk openai -m gpt-6
+bun run run.ts ai-gateway openai --model gpt-6
+```
+
+`-m`/`--model` sets `MODEL` for each spawned example process.
+
+## no-key quickstart
+
+```bash
+bun run run.ts core
+bun run core/basic.ts
+bun run core/resilience.ts
+```
+
+## structure
+
+```
+core/                      no-key core api examples
+  basic.ts                 base cruel(fn, opts)
+  resilience.ts            compose + retry + breaker + fallback
+  control.ts               presets + scope + state controls
+
+ai-sdk/                    direct provider examples
+  generate-text/
+    openai/
+      basic.ts             simplest usage
+      heavy.ts             all chaos options maxed
+      with-tools.ts        tool calling under chaos
+      with-output.ts       structured output
+      with-diagnostics.ts  full chaos report
+      multi-turn.ts        multi-step tool usage
+    anthropic/
+    google/
+    ...
+  stream-text/
+  embed/
+  image/
+  speech/
+  transcription/
+
+ai-gateway/                vercel ai gateway examples
+  generate-text/
+  stream-text/
+  embed/
+  image/
+  reasoning/
+  tools/
+  failover/
+  chaos/
+  resilience/
+  multi-provider/
+
+lib/                       shared utilities
+  chaos.ts                 onChaos event logger
+  colors.ts                ansi color constants
+  diagnostics.ts           full chaos report generator
+  print.ts                 formatted output
+  run.ts                   dotenv + error handler
+```

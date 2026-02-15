@@ -1,0 +1,73 @@
+---
+title: resilience
+description: circuit breaker, retry, bulkhead, timeout, fallback
+---
+
+## circuit breaker
+
+```ts
+const api = cruel.circuitBreaker(fetch, {
+  threshold: 5,
+  timeout: 30000,
+  onOpen: () => console.log("circuit opened"),
+  onClose: () => console.log("circuit closed"),
+})
+
+await api("...")
+api.getState() // { state: "closed", failures: 0 }
+```
+
+## retry with backoff
+
+```ts
+const api = cruel.retry(fetch, {
+  attempts: 3,
+  delay: 1000,
+  backoff: "exponential",
+  maxDelay: 10000,
+  onRetry: (attempt, error) => console.log(`retry ${attempt}`),
+  retryIf: (error) => (error as { statusCode?: number }).statusCode !== 404,
+})
+```
+
+## bulkhead
+
+```ts
+const api = cruel.bulkhead(fetch, {
+  maxConcurrent: 10,
+  maxQueue: 100,
+  onReject: () => console.log("rejected"),
+})
+```
+
+## timeout
+
+```ts
+const api = cruel.withTimeout(fetch, {
+  ms: 5000,
+  onTimeout: () => console.log("timed out"),
+})
+```
+
+## fallback
+
+```ts
+const api = cruel.fallback(fetch, {
+  fallback: cachedData,
+  onFallback: (error) => console.log("using fallback"),
+})
+```
+
+## combine patterns
+
+```ts
+import { cruel } from "cruel"
+
+const resilientApi = cruel.retry(
+  cruel.circuitBreaker(
+    cruel(fetch, { fail: 0.1, delay: [100, 500] }),
+    { threshold: 5, timeout: 30000 }
+  ),
+  { attempts: 3, backoff: "exponential" }
+)
+```

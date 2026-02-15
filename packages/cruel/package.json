@@ -1,0 +1,80 @@
+{
+	"name": "cruel",
+	"version": "1.1.0",
+	"description": "chaos testing with zero mercy",
+	"type": "module",
+	"sideEffects": false,
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"bin": {
+		"cruel": "./dist/cli.js"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
+		},
+		"./ai-sdk": {
+			"types": "./dist/ai-sdk.d.ts",
+			"import": "./dist/ai-sdk.js",
+			"require": "./dist/ai-sdk.cjs"
+		},
+		"./matchers": {
+			"types": "./dist/matchers.d.ts",
+			"import": "./dist/matchers.js",
+			"require": "./dist/matchers.cjs"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"test": "bun test",
+		"typecheck": "bunx tsc --noEmit -p tsconfig.json && bunx tsc --noEmit -p tsconfig.types.json",
+		"prepublishOnly": "bun run build"
+	},
+	"keywords": [
+		"chaos",
+		"testing",
+		"fault-injection",
+		"resilience",
+		"reliability",
+		"chaos-engineering",
+		"failure",
+		"retry",
+		"timeout",
+		"latency",
+		"circuit-breaker",
+		"bulkhead",
+		"rate-limit",
+		"ai-sdk",
+		"openai",
+		"anthropic",
+		"llm",
+		"middleware",
+		"jest",
+		"vitest",
+		"mock",
+		"simulation"
+	],
+	"engines": {
+		"node": ">=18"
+	},
+	"author": "Visible",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/visible/cruel",
+		"directory": "packages/cruel"
+	},
+	"homepage": "https://cruel.dev",
+	"devDependencies": {
+		"@types/node": "^22.0.0",
+		"tsup": "^8.0.0",
+		"typescript": "^5.0.0"
+	}
+}

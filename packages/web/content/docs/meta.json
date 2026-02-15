@@ -1,0 +1,14 @@
+{
+	"title": "docs",
+	"pages": [
+		"index",
+		"core",
+		"chaos",
+		"aisdk",
+		"gateway",
+		"resilience",
+		"advanced",
+		"reference",
+		"tooling"
+	]
+}

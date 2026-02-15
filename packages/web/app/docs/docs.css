@@ -1,0 +1,74 @@
+.docs-panel #nd-docs-layout {
+	--fd-docs-height: calc(100dvh - var(--docs-pad) * 2 - 2px) !important;
+	min-height: unset !important;
+	height: var(--fd-docs-height) !important;
+	max-height: var(--fd-docs-height) !important;
+}
+
+.docs-panel .\[grid-area\:main\] {
+	overflow-y: auto;
+	scrollbar-width: none;
+}
+
+.docs-panel .\[grid-area\:main\]::-webkit-scrollbar {
+	display: none;
+}
+
+.docs-panel .\[grid-area\:toc-popover\] {
+	display: none !important;
+}
+
+.docs-panel .fixed.rounded-xl {
+	top: 20px !important;
+	left: 20px !important;
+}
+
+.docs-panel [data-radix-scroll-area-viewport],
+.docs-panel [style] {
+	mask-image: none !important;
+	-webkit-mask-image: none !important;
+}
+
+.docs-panel
+	.mask-\[linear-gradient\(to_bottom\,transparent\,white_16px\,white_calc\(100\%-16px\)\,transparent\)\] {
+	mask: none !important;
+	-webkit-mask: none !important;
+}
+
+[data-state="open"][class*="backdrop-blur"],
+[data-state="closed"][class*="backdrop-blur"] {
+	background: rgba(0, 0, 0, 0.6) !important;
+	backdrop-filter: blur(4px) !important;
+}
+
+[data-state][class*="shadow-lg"][class*="end-0"] {
+	background: #0a0a0a !important;
+	border-left: 1px solid rgba(255, 255, 255, 0.07) !important;
+	border-radius: var(--panel-radius) 0 0 var(--panel-radius) !important;
+	margin: var(--docs-pad) 0 var(--docs-pad) 0 !important;
+	height: calc(100dvh - var(--docs-pad) * 2) !important;
+	top: 0 !important;
+	bottom: 0 !important;
+}
+
+.docs-panel *::-webkit-scrollbar {
+	width: 4px;
+}
+
+.docs-panel *::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.docs-panel *::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.08);
+	border-radius: 4px;
+}
+
+.docs-panel *::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.15);
+}
+
+.docs-panel * {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}

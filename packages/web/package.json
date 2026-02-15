@@ -1,0 +1,32 @@
+{
+	"name": "@cruel/web",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"dev": "next dev",
+		"build": "next build",
+		"start": "next start",
+		"source": "bun ../../node_modules/fumadocs-mdx/dist/bin.js",
+		"typecheck": "bun run source && tsc --noEmit"
+	},
+	"dependencies": {
+		"cruel": "workspace:*",
+		"next": "^16.0.0",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0",
+		"geist": "^1.4.0",
+		"fumadocs-core": "latest",
+		"fumadocs-mdx": "latest",
+		"fumadocs-ui": "latest",
+		"@orama/core": "latest",
+		"@types/mdx": "latest"
+	},
+	"devDependencies": {
+		"@types/node": "^22.0.0",
+		"@types/react": "^19.0.0",
+		"@types/react-dom": "^19.0.0",
+		"@tailwindcss/postcss": "^4.0.0",
+		"tailwindcss": "^4.0.0",
+		"typescript": "^5.0.0"
+	}
+}

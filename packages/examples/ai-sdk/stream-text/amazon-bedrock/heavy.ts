@@ -1,0 +1,34 @@
+import { bedrock } from "@ai-sdk/amazon-bedrock"
+import { streamText } from "ai"
+import { cruelModel } from "cruel/ai-sdk"
+import { log } from "../../../lib/chaos"
+import { run } from "../../../lib/run"
+
+run(async () => {
+	const model = cruelModel(bedrock("anthropic.claude-sonnet-4-5-20250929-v1:0"), {
+		rateLimit: 0.3,
+		overloaded: 0.15,
+		delay: [500, 2000],
+		slowTokens: [100, 500],
+		streamCut: 0.2,
+		corruptChunks: 0.1,
+		partialResponse: 0.15,
+		fail: 0.1,
+		onChaos: log,
+	})
+
+	for (let i = 0; i < 10; i++) {
+		console.log(`\n--- stream ${i + 1} ---`)
+		try {
+			const result = streamText({
+				model,
+				prompt: `Request ${i + 1}: Write a haiku.`,
+			})
+			const text = await result.text
+			if (text) process.stdout.write(text)
+			console.log()
+		} catch (e) {
+			console.log(`failed: ${(e as Error).message}`)
+		}
+	}
+})

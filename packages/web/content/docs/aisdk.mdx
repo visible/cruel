@@ -1,0 +1,167 @@
+---
+title: ai sdk
+description: chaos testing for ai providers, models, and tools
+---
+
+## ai failure modes
+
+```ts
+cruel.ai.rateLimit(fn, 0.1)
+cruel.ai.overloaded(fn, 0.05)
+cruel.ai.contextLength(fn, 0.02)
+cruel.ai.contentFilter(fn, 0.01)
+cruel.ai.modelUnavailable(fn)
+cruel.ai.slowTokens(fn, [50, 200])
+cruel.ai.streamCut(fn, 0.1)
+cruel.ai.partialResponse(fn, 0.1)
+cruel.ai.invalidJson(fn, 0.05)
+cruel.ai.realistic(fn)
+cruel.ai.nightmare(fn)
+```
+
+## wrap a provider
+
+```ts
+import { cruelProvider } from "cruel/ai-sdk"
+import { generateText } from "ai"
+import { openai } from "@ai-sdk/openai"
+
+const chaosOpenAI = cruelProvider(openai, {
+  rateLimit: 0.1,
+  overloaded: 0.05,
+  delay: [100, 500],
+})
+
+const result = await generateText({
+  model: chaosOpenAI("gpt-4o"),
+  prompt: "hello",
+})
+```
+
+## wrap a model
+
+```ts
+import { cruelModel, presets } from "cruel/ai-sdk"
+
+const model = cruelModel(openai("gpt-4o"), presets.realistic)
+```
+
+## model override for tests
+
+set `MODEL` to swap model ids without editing code:
+
+```bash
+MODEL=gpt-6 bun run your-script.ts
+```
+
+this works for ids with and without a provider prefix:
+
+- `gpt-4o` -> `gpt-6`
+- `openai/gpt-4o` -> `openai/gpt-6`
+
+## streaming with chaos
+
+```ts
+import { cruelModel } from "cruel/ai-sdk"
+
+const result = streamText({
+  model: cruelModel(openai("gpt-4o"), {
+    streamCut: 0.1,
+    slowTokens: [50, 200],
+  }),
+  prompt: "hello",
+})
+```
+
+## middleware
+
+```ts
+import { cruelMiddleware } from "cruel/ai-sdk"
+import { wrapLanguageModel } from "ai"
+import { openai } from "@ai-sdk/openai"
+
+const middleware = cruelMiddleware({
+  rateLimit: 0.1,
+  overloaded: 0.05,
+  streamCut: 0.1,
+})
+
+const model = wrapLanguageModel({
+  model: openai("gpt-4o"),
+  middleware,
+})
+```
+
+## presets
+
+```ts
+import { presets } from "cruel/ai-sdk"
+
+presets.realistic    // light, production-like
+presets.unstable     // medium chaos
+presets.harsh        // aggressive chaos
+presets.nightmare    // extreme chaos
+presets.apocalypse   // everything fails
+```
+
+## tool wrapping
+
+```ts
+import { cruelTools } from "cruel/ai-sdk"
+
+const tools = cruelTools({
+  search: { execute: searchFn },
+  calculate: { execute: calcFn },
+}, {
+  toolFailure: 0.1,
+  toolTimeout: 0.05,
+  delay: [50, 200],
+})
+```
+
+## error handling
+
+cruel errors are fully compatible with the ai sdk's `APICallError.isInstance()` check, so retries work automatically:
+
+```ts
+import { APICallError } from "ai"
+
+try {
+  await generateText({ model, prompt })
+} catch (e) {
+  if (APICallError.isInstance(e)) {
+    console.log("status:", e.statusCode)
+    console.log("retryable:", e.isRetryable)
+  }
+}
+```
+
+## embeddings
+
+```ts
+import { cruelEmbeddingModel } from "cruel/ai-sdk"
+import { embed } from "ai"
+import { openai } from "@ai-sdk/openai"
+
+const model = cruelEmbeddingModel(openai.embedding("text-embedding-3-small"), {
+  rateLimit: 0.2,
+  delay: [50, 200],
+})
+
+const { embedding } = await embed({ model, value: "hello" })
+```
+
+## images
+
+```ts
+import { cruelImageModel } from "cruel/ai-sdk"
+import { generateImage } from "ai"
+import { openai } from "@ai-sdk/openai"
+
+const model = cruelImageModel(openai.image("dall-e-3"), {
+  rateLimit: 0.2,
+  delay: [500, 2000],
+})
+
+const { images } = await generateImage({ model, prompt: "a cat" })
+```

@@ -1,0 +1,103 @@
+---
+title: advanced
+description: presets, global mode, scenarios, fetch interception
+---
+
+## presets
+
+```ts
+cruel.enable(cruel.presets.development)
+cruel.enable(cruel.presets.staging)
+cruel.enable(cruel.presets.production)
+cruel.enable(cruel.presets.harsh)
+cruel.enable(cruel.presets.nightmare)
+cruel.enable(cruel.presets.apocalypse)
+```
+
+## profiles
+
+```ts
+cruel.profile("testing", { fail: 0.2, delay: 100 })
+cruel.useProfile("testing")
+```
+
+## global mode
+
+```ts
+cruel.enable({ fail: 0.1, delay: [100, 500] })
+cruel.disable()
+cruel.toggle()
+cruel.isEnabled()
+```
+
+## scoped chaos
+
+```ts
+await cruel.scope(async () => {
+  await api("...")
+}, { fail: 0.2 })
+```
+
+## fluent api
+
+```ts
+cruel.wrap(fn).fail(0.1)
+cruel.wrap(fn).slow(500)
+cruel.wrap(fn).timeout(0.05)
+cruel.wrap(fn).flaky()
+cruel.wrap(fn).nightmare()
+```
+
+## factory
+
+```ts
+import { createCruel } from "cruel"
+
+const myCruel = createCruel({ delay: 100 })
+```
+
+## scenarios
+
+```ts
+cruel.scenario("outage", {
+  chaos: { fail: 1 },
+  duration: 5000,
+})
+
+await cruel.play("outage")
+cruel.stop()
+
+await cruel.play("networkPartition")
+await cruel.play("highLatency")
+await cruel.play("degraded")
+await cruel.play("recovery")
+```
+
+## fetch interception
+
+```ts
+cruel.patchFetch()
+
+cruel.intercept("api.openai.com", {
+  rateLimit: { rate: 0.1, retryAfter: 60 },
+  delay: [100, 500],
+})
+
+cruel.intercept(/api\.anthropic\.com/, {
+  fail: 0.1,
+  status: [529],
+})
+
+cruel.unpatchFetch()
+```
+
+## production rollout checklist
+
+for production-like chaos drills, keep blast radius controlled:
+
+1. start with low rates (`0.01` - `0.05`) and increase gradually
+2. run chaos in a scoped block or dedicated test path first
+3. attach `onChaos` and record event types, model ids, and latency
+4. keep retry, fallback, and circuit-breaker logic enabled during tests
+5. run deterministic passes with `cruel.seed(...)` before random passes
+6. stop chaos immediately if error budget or latency thresholds are exceeded

@@ -1,0 +1,65 @@
+name: publish
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/cruel/package.json"
+      - "packages/cruel/src/**"
+      - "packages/cruel/typecheck/**"
+      - "packages/cruel/tsconfig.json"
+      - "packages/cruel/tsconfig.types.json"
+      - "packages/cruel/tsup.config.ts"
+      - "package.json"
+      - "bun.lock"
+  workflow_dispatch:
+
+concurrency:
+  group: publish-cruel
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run --filter cruel typecheck
+
+      - run: bun run --filter cruel build
+
+      - run: bun run --filter cruel test
+
+      - id: package
+        run: |
+          echo "name=$(node -p "require('./packages/cruel/package.json').name")" >> "$GITHUB_OUTPUT"
+          echo "version=$(node -p "require('./packages/cruel/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - id: published
+        run: |
+          if npm view "${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }}" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.published.outputs.exists == 'true'
+        run: echo "already published ${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }}, skipping"
+
+      - if: steps.published.outputs.exists == 'false'
+        run: cd packages/cruel && npm pack --dry-run
+
+      - if: steps.published.outputs.exists == 'false'
+        run: cd packages/cruel && npm publish --access public --provenance

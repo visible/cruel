@@ -1,0 +1,40 @@
+---
+title: chaos injection
+description: network, http, and stream failure simulation
+---
+
+## network
+
+```ts
+cruel.network.latency(fn, [100, 500])
+cruel.network.packetLoss(fn, 0.1)
+cruel.network.disconnect(fn, 0.05)
+cruel.network.dns(fn, 0.02)
+cruel.network.slow(fn)
+cruel.network.unstable(fn)
+cruel.network.offline(fn)
+```
+
+## http
+
+```ts
+cruel.http.status(fn, 500, 0.1)
+cruel.http.status(fn, [500, 502, 503])
+cruel.http.rateLimit(fn, 0.1)
+cruel.http.serverError(fn, 0.1)
+cruel.http.clientError(fn, 0.1)
+cruel.http.badGateway(fn)
+cruel.http.serviceUnavailable(fn)
+cruel.http.gatewayTimeout(fn)
+```
+
+## streams
+
+```ts
+cruel.stream.cut(fn, 0.1)
+cruel.stream.pause(fn, 500)
+cruel.stream.corrupt(fn, 0.1)
+cruel.stream.truncate(fn, 0.1)
+cruel.stream.slow(fn)
+cruel.stream.flaky(fn)
+```
