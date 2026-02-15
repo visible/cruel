@@ -69,3 +69,14 @@
 		radial-gradient(140% 120% at 90% 90%, rgba(140, 100, 100, 0.03) 0%, transparent 55%);
 	background-color: #0a0a0a;
 }
+
+[class*="shadow-2xl"] [class*="max-h-[460px]"][class*="overflow-y-auto"] {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+[class*="shadow-2xl"] [class*="max-h-[460px]"][class*="overflow-y-auto"]::-webkit-scrollbar {
+	display: none;
+	width: 0;
+	height: 0;
+}

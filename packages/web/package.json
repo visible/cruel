@@ -15,11 +15,11 @@
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",
 		"geist": "^1.4.0",
-		"fumadocs-core": "latest",
-		"fumadocs-mdx": "latest",
-		"fumadocs-ui": "latest",
-		"@orama/core": "latest",
-		"@types/mdx": "latest"
+		"fumadocs-core": "16.6.0",
+		"fumadocs-mdx": "14.2.7",
+		"fumadocs-ui": "16.6.0",
+		"@orama/core": "1.2.18",
+		"@types/mdx": "2.0.13"
 	},
 	"devDependencies": {
 		"@types/node": "^22.0.0",
