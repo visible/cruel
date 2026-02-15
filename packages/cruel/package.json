@@ -1,6 +1,6 @@
 {
 	"name": "cruel",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"description": "chaos testing with zero mercy",
 	"type": "module",
 	"sideEffects": false,
