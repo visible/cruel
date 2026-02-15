@@ -8,6 +8,10 @@ import { Anchor } from "@/components/anchor"
 import { Copy } from "@/components/copy"
 import { source } from "@/lib/source"
 
+export const dynamic = "force-static"
+export const dynamicParams = false
+export const revalidate = false
+
 function clean(text: string): string {
 	return text.replace(/^---[\s\S]*?---\s*/m, "").trim()
 }
