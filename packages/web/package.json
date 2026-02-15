@@ -6,7 +6,8 @@
 		"dev": "next dev",
 		"build": "next build",
 		"start": "next start",
-		"typecheck": "tsc --noEmit"
+		"source": "bun ../../node_modules/fumadocs-mdx/dist/bin.js",
+		"typecheck": "bun run source && tsc --noEmit"
 	},
 	"dependencies": {
 		"cruel": "workspace:*",
