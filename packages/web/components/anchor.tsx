@@ -60,6 +60,7 @@ export function Anchor() {
 			url.hash = hash.slice(1)
 			void navigator.clipboard.writeText(url.toString())
 			mark(link)
+			link.blur()
 		}
 
 		page.addEventListener("click", copy)
