@@ -51,7 +51,11 @@ export default async function Page(props: { params: Promise<{ slug?: string[] }>
 		<DocsPage
 			toc={resolved.toc}
 			tableOfContent={{
+				style: "clerk",
 				footer: <Copy text={text} />,
+			}}
+			tableOfContentPopover={{
+				style: "clerk",
 			}}
 		>
 			<DocsBody>
