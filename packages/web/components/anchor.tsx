@@ -5,7 +5,8 @@ import { useEffect } from "react"
 export function Anchor() {
 	useEffect(() => {
 		const page = document.getElementById("nd-page")
-		if (!page) return
+		if (!(page instanceof HTMLElement)) return
+		const root = page
 		const timers = new WeakMap<HTMLAnchorElement, number>()
 		const icons = new WeakMap<SVGSVGElement, string>()
 
@@ -37,12 +38,13 @@ export function Anchor() {
 			const timer = window.setTimeout(() => {
 				let reveal = false
 				if (heading instanceof HTMLElement) {
+						const frame = root.getBoundingClientRect()
 					const rect = heading.getBoundingClientRect()
 					const visible =
-						rect.bottom > 0 &&
-						rect.top < window.innerHeight &&
-						rect.right > 0 &&
-						rect.left < window.innerWidth
+						rect.bottom > frame.top &&
+						rect.top < frame.bottom &&
+						rect.right > frame.left &&
+						rect.left < frame.right
 					reveal = visible && heading.matches(":hover")
 					if (!reveal) heading.dataset.lock = "true"
 				}
@@ -86,8 +88,8 @@ export function Anchor() {
 			link.blur()
 		}
 
-		page.addEventListener("click", copy)
-		return () => page.removeEventListener("click", copy)
+		root.addEventListener("click", copy)
+		return () => root.removeEventListener("click", copy)
 	}, [])
 
 	return null
