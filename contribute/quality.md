@@ -22,3 +22,4 @@ bun run qa
 3. ai-sdk and gateway examples still run with `-m` override
 4. no widening of public types without tests in `packages/cruel/typecheck/types.ts`
 5. `packages/cruel` exports stay stable (`.`, `./ai-sdk`, `./matchers`)
+6. set `NPM_TOKEN` in repository secrets for `.github/workflows/publish.yml`
