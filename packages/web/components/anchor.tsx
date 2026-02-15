@@ -29,11 +29,14 @@ export function Anchor() {
 			const current = icons.get(icon) ?? icon.innerHTML
 			if (!icons.has(icon)) icons.set(icon, current)
 
-			icon.innerHTML = '<path d="M20 6 9 17l-5-5"></path>'
+			link.dataset.copied = "true"
+			icon.innerHTML =
+				'<path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>'
 
 			const timer = window.setTimeout(() => {
 				const value = icons.get(icon)
 				if (value) icon.innerHTML = value
+				delete link.dataset.copied
 			}, 1200)
 
 			const previous = timers.get(link)
