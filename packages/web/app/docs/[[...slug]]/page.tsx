@@ -4,6 +4,7 @@ import defaultMdxComponents from "fumadocs-ui/mdx"
 import { DocsBody, DocsPage } from "fumadocs-ui/page"
 import type { MDXContent } from "mdx/types"
 import { notFound } from "next/navigation"
+import { Anchor } from "@/components/anchor"
 import { Copy } from "@/components/copy"
 import { source } from "@/lib/source"
 
@@ -58,6 +59,7 @@ export default async function Page(props: { params: Promise<{ slug?: string[] }>
 				style: "clerk",
 			}}
 		>
+			<Anchor />
 			<DocsBody>
 				<h1>{page.data.title}</h1>
 				<p className="text-fd-muted-foreground text-lg">{page.data.description}</p>
