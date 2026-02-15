@@ -1,7 +1,7 @@
+import { Analytics } from "@vercel/analytics/react"
 import { RootProvider } from "fumadocs-ui/provider/next"
 import { GeistMono } from "geist/font/mono"
 import type { Metadata, Viewport } from "next"
-import { Analytics } from "@vercel/analytics/react"
 import "./globals.css"
 
 export const metadata: Metadata = {
