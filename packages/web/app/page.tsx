@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises"
+import { join } from "node:path"
 import Link from "next/link"
 
 const code = `import { cruel } from "cruel"
@@ -10,7 +12,29 @@ const api = cruel(fetch, {
 
 const res = await api("https://api.example.com")`
 
-export default function Page() {
+async function version(): Promise<string> {
+	const paths = [
+		join(process.cwd(), "../cruel/package.json"),
+		join(process.cwd(), "packages/cruel/package.json"),
+	]
+
+	for (const path of paths) {
+		try {
+			const file = await readFile(path, "utf8")
+			const data: unknown = JSON.parse(file)
+			if (typeof data === "object" && data !== null) {
+				const value = Reflect.get(data, "version")
+				if (typeof value === "string" && value.length > 0) return `v${value}`
+			}
+		} catch {}
+	}
+
+	return "v0.0.0"
+}
+
+export default async function Page() {
+	const tag = await version()
+
 	return (
 		<main className="h-dvh bg-[#f5f3ef] flex items-center justify-center p-[var(--docs-pad)]">
 			<div className="relative w-full h-full rounded-[var(--panel-radius)] border border-white/10 overflow-hidden">
@@ -81,7 +105,7 @@ export default function Page() {
 					</div>
 
 					<div className="mx-2 sm:mx-[10px] mb-2 sm:mb-[10px] rounded-b-[calc(var(--panel-radius)-8px)] border-t border-white/[0.06] h-[44px] sm:h-[48px] flex items-center justify-between px-4 sm:px-5 text-[11px] sm:text-[12px]">
-						<div className="text-white/20 italic">v1.0.1</div>
+						<div className="text-white/20 italic">{tag}</div>
 						<div className="text-white/35 select-all cursor-text">
 							<span className="text-white/15 select-none">$ </span>
 							bun add cruel
