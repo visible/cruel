@@ -35,10 +35,6 @@ export function Anchor() {
 				'<path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>'
 
 			const timer = window.setTimeout(() => {
-				const value = icons.get(icon)
-				if (value) icon.innerHTML = value
-				delete link.dataset.copied
-
 				if (heading instanceof HTMLElement) {
 					heading.dataset.lock = "true"
 					heading.addEventListener(
@@ -49,6 +45,10 @@ export function Anchor() {
 						{ once: true },
 					)
 				}
+
+				const value = icons.get(icon)
+				if (value) icon.innerHTML = value
+				delete link.dataset.copied
 			}, 1200)
 
 			const previous = timers.get(link)
