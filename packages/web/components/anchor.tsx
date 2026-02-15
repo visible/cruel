@@ -25,7 +25,6 @@ export function Anchor() {
 		function mark(link: HTMLAnchorElement) {
 			const icon = link.nextElementSibling
 			if (!(icon instanceof SVGSVGElement)) return
-			const heading = link.parentElement
 
 			const current = icons.get(icon) ?? icon.innerHTML
 			if (!icons.has(icon)) icons.set(icon, current)
@@ -35,17 +34,6 @@ export function Anchor() {
 				'<path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>'
 
 			const timer = window.setTimeout(() => {
-				if (heading instanceof HTMLElement) {
-					heading.dataset.lock = "true"
-					heading.addEventListener(
-						"pointerleave",
-						() => {
-							delete heading.dataset.lock
-						},
-						{ once: true },
-					)
-				}
-
 				const value = icons.get(icon)
 				if (value) icon.innerHTML = value
 				delete link.dataset.copied
