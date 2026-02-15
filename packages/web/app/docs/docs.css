@@ -38,6 +38,22 @@
 	background: rgba(255, 255, 255, 0.22) !important;
 }
 
+.docs-panel .prose :is(h2, h3, h4, h5, h6) > a.peer {
+	display: inline-flex;
+	align-items: center;
+	padding-inline-end: 14px;
+	margin-inline-end: -14px;
+}
+
+.docs-panel .prose :is(h2, h3, h4, h5, h6) > svg {
+	pointer-events: none;
+}
+
+.docs-panel .prose :is(h2, h3, h4, h5, h6):hover > svg,
+.docs-panel .prose :is(h2, h3, h4, h5, h6):focus-within > svg {
+	opacity: 1 !important;
+}
+
 [data-state="open"][class*="backdrop-blur"],
 [data-state="closed"][class*="backdrop-blur"] {
 	background: rgba(0, 0, 0, 0.6) !important;
