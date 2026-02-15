@@ -47,22 +47,8 @@
 }
 
 .docs-panel .prose :is(h2, h3, h4, h5, h6) > svg {
-	pointer-events: none;
-}
-
-.docs-panel .prose :is(h2, h3, h4, h5, h6) > a.peer[data-copied="true"] + svg {
-	opacity: 0 !important;
-}
-
-.docs-panel .prose :is(h2, h3, h4, h5, h6) > a.peer[data-copied="true"]::after {
-	content: "✓";
-	position: absolute;
-	inset-inline-end: -14px;
-	top: 50%;
-	transform: translateY(-50%);
-	color: rgba(255, 255, 255, 0.82);
-	font-size: 14px;
-	line-height: 1;
+	pointer-events: auto;
+	cursor: pointer;
 }
 
 .docs-panel .prose :is(h2, h3, h4, h5, h6):hover > svg,
