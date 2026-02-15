@@ -25,6 +25,7 @@ export function Anchor() {
 		function mark(link: HTMLAnchorElement) {
 			const icon = link.nextElementSibling
 			if (!(icon instanceof SVGSVGElement)) return
+			const heading = link.parentElement
 
 			const current = icons.get(icon) ?? icon.innerHTML
 			if (!icons.has(icon)) icons.set(icon, current)
@@ -37,6 +38,17 @@ export function Anchor() {
 				const value = icons.get(icon)
 				if (value) icon.innerHTML = value
 				delete link.dataset.copied
+
+				if (heading instanceof HTMLElement) {
+					heading.dataset.lock = "true"
+					heading.addEventListener(
+						"pointerleave",
+						() => {
+							delete heading.dataset.lock
+						},
+						{ once: true },
+					)
+				}
 			}, 1200)
 
 			const previous = timers.get(link)
