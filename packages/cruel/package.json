@@ -8,7 +8,7 @@
 	"module": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"bin": {
-		"cruel": "./dist/cli.js"
+		"cruel": "dist/cli.js"
 	},
 	"exports": {
 		".": {
@@ -68,7 +68,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/visible/cruel",
+		"url": "git+https://github.com/visible/cruel.git",
 		"directory": "packages/cruel"
 	},
 	"homepage": "https://cruel.dev",
