@@ -49,6 +49,7 @@
 .docs-panel .prose :is(h2, h3, h4, h5, h6) > svg {
 	pointer-events: auto;
 	cursor: pointer;
+	transition: none !important;
 }
 
 .docs-panel .prose :is(h2, h3, h4, h5, h6) > a.peer[data-copied="true"] + svg {
