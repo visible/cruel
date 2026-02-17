@@ -1,6 +1,7 @@
 import { Analytics } from "@vercel/analytics/react"
 import { RootProvider } from "fumadocs-ui/provider/next"
 import { GeistMono } from "geist/font/mono"
+import { GeistSans } from "geist/font/sans"
 import type { Metadata, Viewport } from "next"
 import "./globals.css"
 
@@ -41,8 +42,8 @@ export const viewport: Viewport = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en" className={`${GeistMono.variable} dark`}>
-			<body className="font-mono antialiased bg-[#f5f3ef]">
+		<html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} dark`}>
+			<body suppressHydrationWarning className="font-sans antialiased bg-[#100E0E] text-white">
 				<RootProvider
 					theme={{ defaultTheme: "dark", enabled: false }}
 					search={{

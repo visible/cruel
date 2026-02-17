@@ -3,6 +3,17 @@
 @import "fumadocs-ui/css/preset.css";
 
 @theme {
+	--font-sans:
+		"Geist Sans",
+		ui-sans-serif,
+		system-ui,
+		-apple-system,
+		Segoe UI,
+		Roboto,
+		Helvetica,
+		Arial,
+		"Apple Color Emoji",
+		"Segoe UI Emoji";
 	--font-mono: "Geist Mono", ui-monospace, monospace;
 }
 
@@ -51,6 +62,48 @@
 	color: #0a0a0a;
 }
 
+@keyframes cursor-fade-up {
+	from {
+		opacity: 0;
+		transform: translate3d(0, 14px, 0);
+		filter: blur(0.5px);
+	}
+	to {
+		opacity: 1;
+		transform: translate3d(0, 0, 0);
+		filter: blur(0);
+	}
+}
+
+.cursor-landing {
+	--cursor-accent: #ff8a3d;
+	--cursor-accent-soft: rgba(255, 138, 61, 0.14);
+}
+
+.cursor-fade-up {
+	animation: cursor-fade-up 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cursor-shimmer {
+	0% {
+		background-position: 0% 50%;
+	}
+	100% {
+		background-position: 100% 50%;
+	}
+}
+
+.animate-shimmer {
+	animation: cursor-shimmer 1400ms linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.cursor-fade-up,
+	.animate-shimmer {
+		animation: none;
+	}
+}
+
 .grain::before {
 	content: "";
 	position: absolute;
@@ -76,6 +129,17 @@
 }
 
 [class*="shadow-2xl"] [class*="max-h-[460px]"][class*="overflow-y-auto"]::-webkit-scrollbar {
+	display: none;
+	width: 0;
+	height: 0;
+}
+
+.cursor-terminal-scroll {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+.cursor-terminal-scroll::-webkit-scrollbar {
 	display: none;
 	width: 0;
 	height: 0;
