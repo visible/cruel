@@ -1,8 +1,8 @@
-import { CursorNav } from "../components/landing/cursor-nav"
-import { CursorHero } from "../components/landing/cursor-hero"
-import { CursorFeatures } from "../components/landing/cursor-features"
 import { CursorFrontier } from "../components/landing/cursor-bento"
+import { CursorFeatures } from "../components/landing/cursor-features"
 import { CursorFooter } from "../components/landing/cursor-footer"
+import { CursorHero } from "../components/landing/cursor-hero"
+import { CursorNav } from "../components/landing/cursor-nav"
 
 export default function Page() {
 	return (

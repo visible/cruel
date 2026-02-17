@@ -97,7 +97,8 @@ export function Hero() {
 					p.vy = (Math.random() - 0.5) * 0.5
 				}
 
-				ctx.fillStyle = p.color === "#ff4444" ? "rgba(255, 68, 68, 0.8)" : "rgba(255, 255, 255, 0.4)"
+				ctx.fillStyle =
+					p.color === "#ff4444" ? "rgba(255, 68, 68, 0.8)" : "rgba(255, 255, 255, 0.4)"
 				ctx.beginPath()
 				ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
 				ctx.fill()

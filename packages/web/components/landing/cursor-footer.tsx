@@ -10,15 +10,18 @@ export function CursorFooter() {
 						<div className="mt-3 text-sm text-white/45">
 							Chaos engineering for AI SDK and async APIs.
 						</div>
-						<div className="mt-auto pt-6 text-sm text-white/40">© {new Date().getFullYear()} Visible</div>
+						<div className="mt-auto pt-6 text-sm text-white/40">
+							© {new Date().getFullYear()} Visible
+						</div>
 					</div>
 
 					<div>
-						<div className="text-xs font-mono uppercase tracking-widest text-white/40">
-							Product
-						</div>
+						<div className="text-xs font-mono uppercase tracking-widest text-white/40">Product</div>
 						<div className="mt-4 flex flex-col gap-2">
-							<Link href="/docs" className="text-sm text-white/55 hover:text-white transition-colors">
+							<Link
+								href="/docs"
+								className="text-sm text-white/55 hover:text-white transition-colors"
+							>
 								Docs
 							</Link>
 							<Link

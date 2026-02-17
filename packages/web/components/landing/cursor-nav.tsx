@@ -27,11 +27,48 @@ export function CursorNav() {
 				>
 					<div className="flex items-center">
 						<Link href="/" className="flex items-center gap-2 text-white">
-							<svg viewBox="0 0 32 32" className="size-6 text-[#f1ecde]" fill="none" aria-hidden="true">
-								<line x1="16" y1="4" x2="16" y2="28" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-								<line x1="4" y1="16" x2="28" y2="16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-								<line x1="7.5" y1="7.5" x2="24.5" y2="24.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-								<line x1="24.5" y1="7.5" x2="7.5" y2="24.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+							<svg
+								viewBox="0 0 32 32"
+								className="size-6 text-[#f1ecde]"
+								fill="none"
+								aria-hidden="true"
+							>
+								<line
+									x1="16"
+									y1="4"
+									x2="16"
+									y2="28"
+									stroke="currentColor"
+									strokeWidth="1.7"
+									strokeLinecap="round"
+								/>
+								<line
+									x1="4"
+									y1="16"
+									x2="28"
+									y2="16"
+									stroke="currentColor"
+									strokeWidth="1.7"
+									strokeLinecap="round"
+								/>
+								<line
+									x1="7.5"
+									y1="7.5"
+									x2="24.5"
+									y2="24.5"
+									stroke="currentColor"
+									strokeWidth="1.7"
+									strokeLinecap="round"
+								/>
+								<line
+									x1="24.5"
+									y1="7.5"
+									x2="7.5"
+									y2="24.5"
+									stroke="currentColor"
+									strokeWidth="1.7"
+									strokeLinecap="round"
+								/>
 							</svg>
 							<span className="text-sm font-semibold tracking-tight">Cruel</span>
 						</Link>
@@ -41,7 +78,10 @@ export function CursorNav() {
 						<Link href="/docs" className="text-sm text-white/60 hover:text-white transition-colors">
 							Docs
 						</Link>
-						<Link href="/story" className="text-sm text-white/60 hover:text-white transition-colors">
+						<Link
+							href="/story"
+							className="text-sm text-white/60 hover:text-white transition-colors"
+						>
 							Story
 						</Link>
 						<a

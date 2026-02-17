@@ -98,7 +98,8 @@ export function CursorFrontier() {
 					</div>
 					<div className="md:pt-2">
 						<p className="max-w-md text-pretty text-base leading-relaxed text-[#9a9a9a]">
-							We focus on production-grade failure simulation for AI apps and async backends, not synthetic demos.
+							We focus on production-grade failure simulation for AI apps and async backends, not
+							synthetic demos.
 						</p>
 						<div className="mt-6">
 							<Link

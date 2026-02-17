@@ -21,7 +21,7 @@ const parts: readonly part[] = [
 		title: "the duct tape era",
 		text: [
 			"for the longest time, my approach to this problem was embarrassingly manual. need to test a rate limit? hardcode a mock response that returns a 429. need to test a stream cut? write a custom readable stream that stops halfway through. need to test a timeout? add a setTimeout that never resolves.",
-			"copy and paste between projects. slightly different each time. never quite matching the real error format. always incomplete. always the thing i'd \"get to later\" and never actually finish.",
+			'copy and paste between projects. slightly different each time. never quite matching the real error format. always incomplete. always the thing i\'d "get to later" and never actually finish.',
 			"and honestly? most of the time i just skipped it entirely. shipped the code, crossed my fingers, and hoped that the error handling i wrote based on reading the docs would actually work when a real failure hit.",
 			"spoiler: reading the docs is not the same as testing against real failures.",
 			"the retry logic that looks correct in a code review? it doesn't respect the retry-after header. the stream error handler that catches the right error type? it doesn't clean up the partial response in the ui. the circuit breaker pattern you implemented from that blog post? it's never actually been tripped.",
@@ -34,7 +34,7 @@ const parts: readonly part[] = [
 			"i work on the ai sdk team at vercel. it's an incredible team - lars, nico, and everyone else shipping tools that millions of developers use every day. being part of this team means i get to see how ai integrations work across the entire ecosystem. every provider, every framework, every edge case.",
 			"and i kept seeing the same pattern: developers build amazing ai features, test them against the happy path, ship to production, and then discover their error handling has gaps when real-world chaos hits.",
 			"the ai sdk already does incredible work abstracting away provider differences. unified api, streaming support, structured output, tool calling - all the hard parts handled cleanly. but the one thing no sdk can do for you is test your app's resilience against failures that only happen in production.",
-			"that's when it clicked. what if there was a library that could simulate every failure mode you'd encounter in production? not mocking the entire api - just wrapping your existing code with configurable chaos. tell it \"fail 10% of the time\" or \"add random latency\" or \"cut the stream halfway through\" and let your error handling prove itself.",
+			'that\'s when it clicked. what if there was a library that could simulate every failure mode you\'d encounter in production? not mocking the entire api - just wrapping your existing code with configurable chaos. tell it "fail 10% of the time" or "add random latency" or "cut the stream halfway through" and let your error handling prove itself.',
 			"not a mock. not a test framework. just chaos. realistic, configurable, provider-accurate chaos that works with anything async.",
 		],
 	},
@@ -52,7 +52,7 @@ const parts: readonly part[] = [
 	{
 		title: "the name",
 		text: [
-			"i thought about this for longer than i'd like to admit. tested a bunch of names. \"chaos-inject\" felt corporate. \"fault-line\" felt geological. \"havoc\" was taken.",
+			'i thought about this for longer than i\'d like to admit. tested a bunch of names. "chaos-inject" felt corporate. "fault-line" felt geological. "havoc" was taken.',
 			"then i just thought about what chaos testing should feel like. it should be uncomfortable. it should break things you thought were solid. it should find the bugs you didn't know existed. it should be relentless and thorough and completely without sympathy for your assumptions.",
 			"it should be cruel.",
 			"that's the whole philosophy in one word. if your tests are gentle, your production failures will be brutal. better to find out now - in development, with a stack trace and a debugger and a cup of coffee - than at 3am from a production alert while your users watch a loading spinner that never stops.",
@@ -102,7 +102,9 @@ export default function Page() {
 							<div className="mt-14 space-y-14 md:space-y-16">
 								{parts.map((item) => (
 									<section key={item.title}>
-										<h2 className="text-3xl font-semibold text-white tracking-tight">{item.title}</h2>
+										<h2 className="text-3xl font-semibold text-white tracking-tight">
+											{item.title}
+										</h2>
 										<div className="mt-5 space-y-5 text-[16px] leading-[1.85] text-white/64">
 											{item.text.map((line) => (
 												<p key={line}>{line}</p>

@@ -12,7 +12,8 @@ export function CodeDemo() {
 					<span className="mr-4 select-none text-white/20">1</span>
 					<span>
 						<span className="text-purple-400">import</span> {"{"} cruel {"}"}{" "}
-						<span className="text-purple-400">from</span> <span className="text-green-400">"cruel"</span>
+						<span className="text-purple-400">from</span>{" "}
+						<span className="text-green-400">"cruel"</span>
 					</span>
 				</div>
 				<div className="flex">
@@ -28,19 +29,23 @@ export function CodeDemo() {
 				<div className="flex">
 					<span className="mr-4 select-none text-white/20">4</span>
 					<span className="pl-4">
-						fail: <span className="text-orange-400">0.1</span>, <span className="text-white/30">{"// 10% failure rate"}</span>
+						fail: <span className="text-orange-400">0.1</span>,{" "}
+						<span className="text-white/30">{"// 10% failure rate"}</span>
 					</span>
 				</div>
 				<div className="flex">
 					<span className="mr-4 select-none text-white/20">5</span>
 					<span className="pl-4">
-						delay: [<span className="text-orange-400">100</span>, <span className="text-orange-400">500</span>], <span className="text-white/30">{"// 100-500ms latency"}</span>
+						delay: [<span className="text-orange-400">100</span>,{" "}
+						<span className="text-orange-400">500</span>],{" "}
+						<span className="text-white/30">{"// 100-500ms latency"}</span>
 					</span>
 				</div>
 				<div className="flex">
 					<span className="mr-4 select-none text-white/20">6</span>
 					<span className="pl-4">
-						timeout: <span className="text-orange-400">0.05</span>, <span className="text-white/30">{"// 5% timeouts"}</span>
+						timeout: <span className="text-orange-400">0.05</span>,{" "}
+						<span className="text-white/30">{"// 5% timeouts"}</span>
 					</span>
 				</div>
 				<div className="flex">

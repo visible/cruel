@@ -11,7 +11,7 @@ type row = {
 }
 
 const presetrows: readonly row[] = [
-	{ tone: "cmd", text: '$ bun add cruel ai @ai-sdk/openai' },
+	{ tone: "cmd", text: "$ bun add cruel ai @ai-sdk/openai" },
 	{ tone: "code", text: 'import { openai } from "@ai-sdk/openai"' },
 	{ tone: "code", text: 'import { generateText } from "ai"' },
 	{ tone: "code", text: 'import { cruelModel, presets } from "cruel/ai-sdk"' },
@@ -105,9 +105,7 @@ function Spotlight({
 	return (
 		<div className="grid items-center gap-10 md:grid-cols-2 md:gap-16">
 			<div className={flip ? "order-2 md:order-2" : "order-2 md:order-1"}>
-				<h2 className="text-3xl font-semibold tracking-tighter text-white sm:text-4xl">
-					{title}
-				</h2>
+				<h2 className="text-3xl font-semibold tracking-tighter text-white sm:text-4xl">{title}</h2>
 				<p className="mt-5 text-lg text-[#A1A1A1] leading-relaxed">{description}</p>
 				<ul className="mt-8 space-y-3">
 					{bullets.map((b) => (

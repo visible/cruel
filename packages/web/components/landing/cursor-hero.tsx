@@ -24,10 +24,7 @@ export function CursorHero() {
 					</p>
 				</div>
 
-				<div
-					className="cursor-fade-up mt-8 flex items-center"
-					style={{ animationDelay: "150ms" }}
-				>
+				<div className="cursor-fade-up mt-8 flex items-center" style={{ animationDelay: "150ms" }}>
 					<Link
 						href="/docs"
 						className="group inline-flex h-14 items-center gap-3 rounded-none border border-white/14 bg-[#151313] px-8 text-base font-medium text-white transition-colors hover:bg-[#1A1818]"
