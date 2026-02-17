@@ -1,5 +1,5 @@
 .docs-panel #nd-docs-layout {
-	--fd-docs-height: calc(100dvh - var(--docs-pad) * 2 - 2px) !important;
+	--fd-docs-height: 100dvh !important;
 	min-height: unset !important;
 	height: var(--fd-docs-height) !important;
 	max-height: var(--fd-docs-height) !important;
@@ -75,9 +75,9 @@
 [data-state][class*="shadow-lg"][class*="end-0"] {
 	background: #0a0a0a !important;
 	border-left: 1px solid rgba(255, 255, 255, 0.07) !important;
-	border-radius: var(--panel-radius) 0 0 var(--panel-radius) !important;
-	margin: var(--docs-pad) 0 var(--docs-pad) 0 !important;
-	height: calc(100dvh - var(--docs-pad) * 2) !important;
+	border-radius: 0 !important;
+	margin: 0 !important;
+	height: 100dvh !important;
 	top: 0 !important;
 	bottom: 0 !important;
 }
