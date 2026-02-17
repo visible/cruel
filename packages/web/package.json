@@ -7,7 +7,7 @@
 		"build": "next build",
 		"start": "next start",
 		"source": "bun ../../node_modules/fumadocs-mdx/dist/bin.js",
-		"typecheck": "bun run source && tsc --noEmit"
+		"typecheck": "bunx tsc --noEmit"
 	},
 	"dependencies": {
 		"@orama/core": "1.2.18",
