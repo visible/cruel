@@ -7,7 +7,7 @@
 		"build": "next build",
 		"start": "next start",
 		"source": "bun ../../node_modules/fumadocs-mdx/dist/bin.js",
-		"typecheck": "bun run source && tsc --noEmit"
+		"typecheck": "bun run source && bunx tsc --noEmit"
 	},
 	"dependencies": {
 		"@orama/core": "1.2.18",
@@ -20,7 +20,8 @@
 		"geist": "^1.4.0",
 		"next": "^16.0.0",
 		"react": "^19.0.0",
-		"react-dom": "^19.0.0"
+		"react-dom": "^19.0.0",
+		"simple-icons": "^16.9.0"
 	},
 	"devDependencies": {
 		"@types/node": "^22.0.0",
