@@ -1,9 +1,9 @@
 ---
-title: tooling
-description: utilities, cli, testing, and error types
+title: Tooling
+description: Utilities, CLI, testing, and error types
 ---
 
-## utilities
+## Utilities
 
 ```ts
 cruel.coin(0.5)
@@ -13,21 +13,21 @@ cruel.maybe(value, 0.5)
 await cruel.delay(500)
 ```
 
-## stats
+## Stats
 
 ```ts
 cruel.stats()
 cruel.resetStats()
 ```
 
-## deterministic mode
+## Deterministic Mode
 
 ```ts
 cruel.seed(12345)
 cruel.coin(0.5) // same result every time
 ```
 
-## cli
+## CLI
 
 ```bash
 cruel test https://api.example.com --fail 0.1 --count 20
@@ -36,15 +36,15 @@ cruel scenario outage --duration 5000
 cruel presets
 ```
 
-## quality gate
+## Quality Gate
 
 ```bash
 bun run qa
 ```
 
-this runs lint, type checks, package build/test, docs build, and no-key user smoke examples.
+This runs lint, type checks, package build/test, docs build, and no-key user smoke examples.
 
-## testing
+## Testing
 
 ```ts
 import { describe, test, beforeEach } from "bun:test"
@@ -61,7 +61,7 @@ test("handles failures", async () => {
 })
 ```
 
-## error types
+## Error Types
 
 ```ts
 import {

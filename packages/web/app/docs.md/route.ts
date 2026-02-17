@@ -32,7 +32,7 @@ function name(path: string): string {
 
 export async function GET(): Promise<Response> {
 	const paths = await files()
-	const chunks: string[] = ["# cruel docs", ""]
+	const chunks: string[] = ["# Cruel Docs", ""]
 
 	for (const path of paths) {
 		const raw = await readFile(path, "utf8")

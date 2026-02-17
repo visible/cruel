@@ -1,11 +1,11 @@
 ---
-title: ai gateway
-description: chaos testing through the vercel ai gateway
+title: AI Gateway
+description: Chaos testing through the Vercel AI Gateway
 ---
 
-cruel works with `@ai-sdk/gateway` to test how your app handles failures when routing through the vercel ai gateway. the gateway lets you use any provider through a single interface - cruel injects chaos at the model layer so it works identically regardless of which provider the gateway routes to.
+Cruel works with `@ai-sdk/gateway` to test how your app handles failures when routing through the Vercel AI Gateway. The gateway lets you use any provider through a single interface - Cruel injects chaos at the model layer so it works identically regardless of which provider the gateway routes to.
 
-## basic usage
+## Basic Usage
 
 ```ts
 import { gateway } from "@ai-sdk/gateway"
@@ -24,9 +24,9 @@ const result = await generateText({
 })
 ```
 
-## any provider
+## Any Provider
 
-the gateway uses `provider/model` format. cruel wraps the gateway model the same way it wraps any ai sdk model:
+The gateway uses `provider/model` format. Cruel wraps the gateway model the same way it wraps any AI SDK model:
 
 ```ts
 cruelModel(gateway("openai/gpt-4o"), opts)
@@ -37,7 +37,7 @@ cruelModel(gateway("xai/grok-3-fast"), opts)
 cruelModel(gateway("deepseek/deepseek-chat"), opts)
 ```
 
-## model override for tests
+## Model Override for Tests
 
 `MODEL` can swap only the model segment while preserving the gateway provider prefix:
 
@@ -48,7 +48,7 @@ MODEL=gpt-6 bun run your-script.ts
 - `openai/gpt-4o` -> `openai/gpt-6`
 - `anthropic/claude-sonnet-4-5-20250929` -> `anthropic/gpt-6`
 
-## streaming
+## Streaming
 
 ```ts
 import { gateway } from "@ai-sdk/gateway"
@@ -73,7 +73,7 @@ for await (const chunk of result.fullStream) {
 }
 ```
 
-## structured output
+## Structured Output
 
 ```ts
 import { gateway } from "@ai-sdk/gateway"
@@ -99,7 +99,7 @@ const result = await generateText({
 })
 ```
 
-## tool calling
+## Tool Calling
 
 ```ts
 import { gateway } from "@ai-sdk/gateway"
@@ -129,7 +129,7 @@ const result = await generateText({
 })
 ```
 
-## embeddings
+## Embeddings
 
 ```ts
 import { gateway } from "@ai-sdk/gateway"
@@ -144,9 +144,9 @@ const model = cruelEmbeddingModel(
 const { embedding } = await embed({ model, value: "hello" })
 ```
 
-## fallback pattern
+## Fallback Pattern
 
-test what happens when a provider fails and you need to fall back:
+Test what happens when a provider fails and you need to fall back:
 
 ```ts
 import { gateway } from "@ai-sdk/gateway"
@@ -172,9 +172,9 @@ try {
 }
 ```
 
-## multi-provider comparison
+## Multi-provider Comparison
 
-test the same prompt across multiple gateway providers under chaos:
+Test the same prompt across multiple gateway providers under chaos:
 
 ```ts
 import { gateway } from "@ai-sdk/gateway"

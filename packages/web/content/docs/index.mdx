@@ -1,13 +1,13 @@
 ---
-title: getting started
-description: chaos testing with zero mercy
+title: Getting Started
+description: Chaos testing with zero mercy
 ---
 
-cruel is a chaos engineering library for testing how your ai applications handle failures. it wraps ai sdk models with configurable fault injection - rate limits, timeouts, stream cuts, corrupt responses, and more.
+Cruel is a chaos engineering library for testing how your AI applications handle failures. It wraps AI SDK models with configurable fault injection - rate limits, timeouts, stream cuts, corrupt responses, and more.
 
-for the base `cruel(...)` function wrappers (fetch/services/core api), see the [core api](/docs/core) page.
+For the base `cruel(...)` function wrappers (fetch/services/Core API), see the [Core API](/docs/core) page.
 
-## install
+## Install
 
 <CodeBlockTabs defaultValue="bun">
   <CodeBlockTabsList>
@@ -41,7 +41,7 @@ pnpm add cruel
   </CodeBlockTab>
 </CodeBlockTabs>
 
-## wrap a model
+## Wrap a Model
 
 ```ts
 import { openai } from "@ai-sdk/openai"
@@ -60,20 +60,20 @@ const result = await generateText({
 })
 ```
 
-this wraps the model so 20% of calls get a 429 rate limit error and every call has 100-500ms of added latency. the `onChaos` callback fires whenever chaos is injected.
+This wraps the model so 20% of calls get a 429 rate limit error and every call has 100-500ms of added latency. The `onChaos` callback fires whenever chaos is injected.
 
-## how it works
+## How It Works
 
-cruel sits between your app and the ai provider. when a call is made:
+Cruel sits between your app and the AI provider. When a call is made:
 
-1. **pre-call checks** - rate limit, overloaded, timeout, etc. fire before the api call
-2. **api call** - if pre-call passes, the real api call happens
-3. **post-call mutations** - partial response, token usage override, etc. modify the result
-4. **stream transforms** - slow tokens, corrupt chunks, stream cuts modify the stream
+1. **Pre-call checks** - rate limit, overloaded, timeout, etc. fire before the API call
+2. **API call** - if pre-call passes, the real API call happens
+3. **Post-call mutations** - partial response, token usage override, etc. modify the result
+4. **Stream transforms** - slow tokens, corrupt chunks, stream cuts modify the stream
 
-errors use the same format as real provider errors (`APICallError.isInstance()` returns true), so your retry logic works exactly like it would in production.
+Errors use the same format as real provider errors (`APICallError.isInstance()` returns true), so your retry logic works exactly like it would in production.
 
-## streaming
+## Streaming
 
 ```ts
 import { streamText } from "ai"
@@ -92,7 +92,7 @@ for await (const chunk of result.fullStream) {
 }
 ```
 
-## with the gateway
+## With the Gateway
 
 ```ts
 import { gateway } from "@ai-sdk/gateway"
@@ -104,7 +104,7 @@ const model = cruelModel(gateway("openai/gpt-4o"), {
 })
 ```
 
-## presets
+## Presets
 
 ```ts
 import { cruelModel, presets } from "cruel/ai-sdk"
@@ -114,7 +114,7 @@ cruelModel(openai("gpt-4o"), presets.nightmare)
 cruelModel(openai("gpt-4o"), presets.apocalypse)
 ```
 
-## wrap everything
+## Wrap Everything
 
 ```ts
 import { cruelProvider } from "cruel/ai-sdk"
@@ -126,7 +126,7 @@ chaos.embeddingModel("text-embedding-3-small") // embedding model
 chaos.imageModel("dall-e-3")                   // image model
 ```
 
-## run the examples
+## Run the Examples
 
 ```bash
 cd packages/examples
@@ -138,4 +138,4 @@ bun run run.ts ai-sdk openai -m gpt-6
 bun run run.ts ai-gateway openai --model gpt-6
 ```
 
-`-m` / `--model` sets `MODEL` for each matched example process. this swaps the model id without changing example files.
+`-m` / `--model` sets `MODEL` for each matched example process. This swaps the model ID without changing example files.
