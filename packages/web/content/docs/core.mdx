@@ -1,9 +1,9 @@
 ---
-title: core api
-description: the base cruel api for fetch, services, and async functions
+title: Core API
+description: The base Cruel API for fetch, services, and async functions
 ---
 
-## quick start
+## Quick Start
 
 ```ts
 import { cruel } from "cruel"
@@ -19,16 +19,16 @@ const res = await api("https://api.example.com")
 
 `cruel(fn, options)` injects chaos into async functions.
 
-## try without api keys
+## Try Without API Keys
 
 ```bash
 cd packages/examples
 bun run run.ts core
 ```
 
-this runs local core examples only (`core/basic.ts`, `core/resilience.ts`, `core/control.ts`).
+This runs local core examples only (`core/basic.ts`, `core/resilience.ts`, `core/control.ts`).
 
-## chaos options
+## Chaos Options
 
 ```ts
 type ChaosOptions = {
@@ -50,7 +50,7 @@ type ChaosOptions = {
 - `spike`: occasional added latency
 - `enabled`: force-disable on a wrapper
 
-## shortcut wrappers
+## Shortcut Wrappers
 
 ```ts
 cruel.fail(fn, 0.1)
@@ -61,9 +61,9 @@ cruel.unreliable(fn)
 cruel.nightmare(fn)
 ```
 
-## domains
+## Domains
 
-### network
+### Network
 
 ```ts
 cruel.network.latency(fn, [100, 500])
@@ -76,7 +76,7 @@ cruel.network.unstable(fn)
 cruel.network.offline(fn)
 ```
 
-### http
+### HTTP
 
 ```ts
 cruel.http.status(fn, 500, 0.1)
@@ -89,7 +89,7 @@ cruel.http.serviceUnavailable(fn)
 cruel.http.gatewayTimeout(fn)
 ```
 
-### stream
+### Stream
 
 ```ts
 cruel.stream.cut(fn, 0.1)
@@ -104,7 +104,7 @@ cruel.stream.slow(fn)
 cruel.stream.flaky(fn)
 ```
 
-### ai
+### AI
 
 ```ts
 cruel.ai.rateLimit(fn, 0.1)
@@ -120,7 +120,7 @@ cruel.ai.realistic(fn)
 cruel.ai.nightmare(fn)
 ```
 
-## state and control
+## State and Control
 
 ```ts
 cruel.enable({ fail: 0.1, delay: [100, 500] })
@@ -133,7 +133,7 @@ await cruel.scope(async () => {
 }, { fail: 0.2 })
 ```
 
-## resilience wrappers
+## Resilience Wrappers
 
 ```ts
 cruel.circuitBreaker(fn, { threshold: 5, timeout: 30000 })
@@ -147,7 +147,7 @@ cruel.cache(fn, { ttl: 30000 })
 cruel.abort(fn, { signal })
 ```
 
-## composition
+## Composition
 
 ```ts
 const wrapped = cruel.compose(fetcher, {
@@ -170,7 +170,7 @@ cruel.wrap(fetcher).slow([100, 500])
 cruel.wrap(fetcher).timeout(0.05)
 ```
 
-## presets and scenarios
+## Presets and Scenarios
 
 ```ts
 cruel.enable(cruel.presets.development)
@@ -184,7 +184,7 @@ await cruel.play("recovery")
 cruel.stop()
 ```
 
-## diagnostics
+## Diagnostics
 
 ```ts
 const off = cruel.on((event) => {
@@ -196,7 +196,7 @@ cruel.resetStats()
 off()
 ```
 
-## fetch interception
+## Fetch Interception
 
 ```ts
 cruel.patchFetch()
@@ -214,7 +214,7 @@ cruel.unpatchFetch()
 cruel.clearIntercepts()
 ```
 
-## utilities
+## Utilities
 
 ```ts
 cruel.seed(12345)

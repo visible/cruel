@@ -1,13 +1,13 @@
 ---
-title: api reference
-description: all chaos options and model wrappers
+title: API Reference
+description: All chaos options and model wrappers
 ---
 
-for the base `cruel(...)` function api, see [core api](/docs/core). this page focuses on `cruel/ai-sdk`.
+For the base `cruel(...)` function API, see [Core API](/docs/core). This page focuses on `cruel/ai-sdk`.
 
 ## cruelModel
 
-wraps a language model with chaos injection
+Wraps a language model with chaos injection.
 
 ```ts
 import { cruelModel } from "cruel/ai-sdk"
@@ -20,7 +20,7 @@ const model = cruelModel(openai("gpt-4o"), {
 
 ## cruelEmbeddingModel
 
-wraps an embedding model
+Wraps an embedding model.
 
 ```ts
 import { cruelEmbeddingModel } from "cruel/ai-sdk"
@@ -32,7 +32,7 @@ const model = cruelEmbeddingModel(openai.embedding("text-embedding-3-small"), {
 
 ## cruelImageModel
 
-wraps an image model
+Wraps an image model.
 
 ```ts
 import { cruelImageModel } from "cruel/ai-sdk"
@@ -44,7 +44,7 @@ const model = cruelImageModel(openai.image("dall-e-3"), {
 
 ## cruelSpeechModel
 
-wraps a speech model
+Wraps a speech model.
 
 ```ts
 import { cruelSpeechModel } from "cruel/ai-sdk"
@@ -56,7 +56,7 @@ const model = cruelSpeechModel(openai.speech("tts-1"), {
 
 ## cruelTranscriptionModel
 
-wraps a transcription model
+Wraps a transcription model.
 
 ```ts
 import { cruelTranscriptionModel } from "cruel/ai-sdk"
@@ -68,7 +68,7 @@ const model = cruelTranscriptionModel(openai.transcription("whisper-1"), {
 
 ## cruelVideoModel
 
-wraps a video model
+Wraps a video model.
 
 ```ts
 import { cruelVideoModel } from "cruel/ai-sdk"
@@ -80,7 +80,7 @@ const model = cruelVideoModel(google.video("veo-2.0-generate-001"), {
 
 ## cruelProvider
 
-wraps an entire provider - automatically dispatches to the correct wrapper based on model type
+Wraps an entire provider and automatically dispatches to the correct wrapper based on model type.
 
 ```ts
 import { cruelProvider } from "cruel/ai-sdk"
@@ -99,7 +99,7 @@ chaos.imageModel("dall-e-3")           // cruelImageModel
 
 ## cruelMiddleware
 
-creates ai sdk middleware for chaos injection
+Creates AI SDK middleware for chaos injection.
 
 ```ts
 import { cruelMiddleware } from "cruel/ai-sdk"
@@ -113,7 +113,7 @@ const model = wrapLanguageModel({
 
 ## cruelTool / cruelTools
 
-wraps tool execution with chaos
+Wraps tool execution with chaos.
 
 ```ts
 import { cruelTool, cruelTools } from "cruel/ai-sdk"
@@ -122,9 +122,9 @@ const tool = cruelTool(myTool, { toolFailure: 0.2 })
 const tools = cruelTools({ search, calc }, { toolFailure: 0.1 })
 ```
 
-## model id override
+## Model ID Override
 
-if `MODEL` is set in the environment, cruel swaps the model id used by wrappers:
+If `MODEL` is set in the environment, Cruel swaps the model ID used by wrappers:
 
 ```bash
 MODEL=gpt-6 bun run your-script.ts
@@ -133,13 +133,13 @@ MODEL=gpt-6 bun run your-script.ts
 - `gpt-4o` -> `gpt-6`
 - `openai/gpt-4o` -> `openai/gpt-6`
 
-## chaos options
+## Chaos Options
 
-all options are probabilities between 0 and 1 (0 = never, 1 = always)
+All options are probabilities between 0 and 1 (0 = never, 1 = always).
 
-### pre-call failures
+### Pre-call Failures
 
-these fire before the api request is made
+These fire before the API request is made.
 
 | option | type | description |
 |--------|------|-------------|
@@ -155,9 +155,9 @@ these fire before the api request is made
 | `timeout` | `number` | hangs forever (never resolves) |
 | `delay` | `number \| [min, max]` | adds latency in ms before the call |
 
-### post-call mutations
+### Post-call Mutations
 
-these modify the response after a successful api call
+These modify the response after a successful API call.
 
 | option | type | description |
 |--------|------|-------------|
@@ -165,9 +165,9 @@ these modify the response after a successful api call
 | `finishReason` | `string` | overrides the finish reason |
 | `tokenUsage` | `{ inputTokens?, outputTokens? }` | overrides token counts |
 
-### stream transforms
+### Stream Transforms
 
-these modify the token stream in real-time
+These modify the token stream in real-time.
 
 | option | type | description |
 |--------|------|-------------|
@@ -175,14 +175,14 @@ these modify the token stream in real-time
 | `streamCut` | `number` | kills the stream mid-transfer |
 | `corruptChunks` | `number` | replaces random characters with the replacement character |
 
-### tool options
+### Tool Options
 
 | option | type | description |
 |--------|------|-------------|
 | `toolFailure` | `number` | tool execution throws an error |
 | `toolTimeout` | `number` | tool execution hangs forever |
 
-## presets
+## Presets
 
 ```ts
 import { presets } from "cruel/ai-sdk"
@@ -196,9 +196,9 @@ import { presets } from "cruel/ai-sdk"
 | `nightmare` | 0.3 | 0.15 | 0.15 | 500-2000ms |
 | `apocalypse` | 0.4 | 0.2 | 0.2 | 1000-5000ms |
 
-## onChaos callback
+## onChaos Callback
 
-every chaos event fires a callback with the event type and model id
+Every chaos event fires a callback with the event type and model ID.
 
 ```ts
 const model = cruelModel(openai("gpt-4o"), {
@@ -209,11 +209,11 @@ const model = cruelModel(openai("gpt-4o"), {
 })
 ```
 
-event types: `rateLimit`, `overloaded`, `contextLength`, `contentFilter`, `modelUnavailable`, `invalidApiKey`, `quotaExceeded`, `emptyResponse`, `fail`, `timeout`, `delay`, `streamCut`, `slowTokens`, `corruptChunk`, `partialResponse`, `toolFailure`, `toolTimeout`
+Event types: `rateLimit`, `overloaded`, `contextLength`, `contentFilter`, `modelUnavailable`, `invalidApiKey`, `quotaExceeded`, `emptyResponse`, `fail`, `timeout`, `delay`, `streamCut`, `slowTokens`, `corruptChunk`, `partialResponse`, `toolFailure`, `toolTimeout`.
 
-## diagnostics
+## Diagnostics
 
-programmatic chaos reporting for test suites. track events, record results, compute stats, print reports
+Programmatic chaos reporting for test suites. Track events, record results, compute stats, and print reports.
 
 ```ts
 import { cruelModel, diagnostics } from "cruel/ai-sdk"
@@ -240,7 +240,7 @@ for (let i = 1; i <= 10; i++) {
 diagnostics.print(ctx)
 ```
 
-### raw stats for assertions
+### Raw Stats for Assertions
 
 ```ts
 const s = diagnostics.stats(ctx)

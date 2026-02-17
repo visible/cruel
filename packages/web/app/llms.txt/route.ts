@@ -33,7 +33,7 @@ export async function GET(): Promise<Response> {
 	const lines: string[] = [
 		"project: cruel",
 		"site: https://cruel.dev",
-		"summary: chaos engineering for ai sdk and async apis",
+		"summary: chaos engineering for AI SDK and async APIs",
 		"",
 		"docs_markdown: https://cruel.dev/docs.md",
 		"docs_root: https://cruel.dev/docs",

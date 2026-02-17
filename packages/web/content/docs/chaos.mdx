@@ -1,9 +1,9 @@
 ---
-title: chaos injection
-description: network, http, and stream failure simulation
+title: Chaos Injection
+description: Network, HTTP, and stream failure simulation
 ---
 
-## network
+## Network
 
 ```ts
 cruel.network.latency(fn, [100, 500])
@@ -15,7 +15,7 @@ cruel.network.unstable(fn)
 cruel.network.offline(fn)
 ```
 
-## http
+## HTTP
 
 ```ts
 cruel.http.status(fn, 500, 0.1)
@@ -28,7 +28,7 @@ cruel.http.serviceUnavailable(fn)
 cruel.http.gatewayTimeout(fn)
 ```
 
-## streams
+## Streams
 
 ```ts
 cruel.stream.cut(fn, 0.1)

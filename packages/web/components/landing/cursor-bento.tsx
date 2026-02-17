@@ -21,7 +21,7 @@ const items: readonly item[] = [
 		title: "Core and AI SDK",
 		body: "Wrap fetch and async functions with cruel(...), or wrap providers and models with cruel/ai-sdk.",
 		href: "/docs/core",
-		label: "Read core api",
+		label: "Read Core API",
 	},
 	{
 		id: "003",

@@ -1,9 +1,9 @@
 ---
-title: ai sdk
-description: chaos testing for ai providers, models, and tools
+title: AI SDK
+description: Chaos testing for AI providers, models, and tools
 ---
 
-## ai failure modes
+## AI Failure Modes
 
 ```ts
 cruel.ai.rateLimit(fn, 0.1)
@@ -19,7 +19,7 @@ cruel.ai.realistic(fn)
 cruel.ai.nightmare(fn)
 ```
 
-## wrap a provider
+## Wrap a Provider
 
 ```ts
 import { cruelProvider } from "cruel/ai-sdk"
@@ -38,7 +38,7 @@ const result = await generateText({
 })
 ```
 
-## wrap a model
+## Wrap a Model
 
 ```ts
 import { cruelModel, presets } from "cruel/ai-sdk"
@@ -46,20 +46,20 @@ import { cruelModel, presets } from "cruel/ai-sdk"
 const model = cruelModel(openai("gpt-4o"), presets.realistic)
 ```
 
-## model override for tests
+## Model Override for Tests
 
-set `MODEL` to swap model ids without editing code:
+Set `MODEL` to swap model IDs without editing code:
 
 ```bash
 MODEL=gpt-6 bun run your-script.ts
 ```
 
-this works for ids with and without a provider prefix:
+This works for IDs with and without a provider prefix:
 
 - `gpt-4o` -> `gpt-6`
 - `openai/gpt-4o` -> `openai/gpt-6`
 
-## streaming with chaos
+## Streaming with Chaos
 
 ```ts
 import { cruelModel } from "cruel/ai-sdk"
@@ -73,7 +73,7 @@ const result = streamText({
 })
 ```
 
-## middleware
+## Middleware
 
 ```ts
 import { cruelMiddleware } from "cruel/ai-sdk"
@@ -92,7 +92,7 @@ const model = wrapLanguageModel({
 })
 ```
 
-## presets
+## Presets
 
 ```ts
 import { presets } from "cruel/ai-sdk"
@@ -104,7 +104,7 @@ presets.nightmare    // extreme chaos
 presets.apocalypse   // everything fails
 ```
 
-## tool wrapping
+## Tool Wrapping
 
 ```ts
 import { cruelTools } from "cruel/ai-sdk"
@@ -119,9 +119,9 @@ const tools = cruelTools({
 })
 ```
 
-## error handling
+## Error Handling
 
-cruel errors are fully compatible with the ai sdk's `APICallError.isInstance()` check, so retries work automatically:
+Cruel errors are fully compatible with the AI SDK's `APICallError.isInstance()` check, so retries work automatically:
 
 ```ts
 import { APICallError } from "ai"
@@ -136,7 +136,7 @@ try {
 }
 ```
 
-## embeddings
+## Embeddings
 
 ```ts
 import { cruelEmbeddingModel } from "cruel/ai-sdk"
@@ -151,7 +151,7 @@ const model = cruelEmbeddingModel(openai.embedding("text-embedding-3-small"), {
 const { embedding } = await embed({ model, value: "hello" })
 ```
 
-## images
+## Images
 
 ```ts
 import { cruelImageModel } from "cruel/ai-sdk"

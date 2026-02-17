@@ -1,9 +1,9 @@
 ---
-title: resilience
-description: circuit breaker, retry, bulkhead, timeout, fallback
+title: Resilience
+description: Circuit breaker, retry, bulkhead, timeout, and fallback
 ---
 
-## circuit breaker
+## Circuit Breaker
 
 ```ts
 const api = cruel.circuitBreaker(fetch, {
@@ -17,7 +17,7 @@ await api("...")
 api.getState() // { state: "closed", failures: 0 }
 ```
 
-## retry with backoff
+## Retry with Backoff
 
 ```ts
 const api = cruel.retry(fetch, {
@@ -30,7 +30,7 @@ const api = cruel.retry(fetch, {
 })
 ```
 
-## bulkhead
+## Bulkhead
 
 ```ts
 const api = cruel.bulkhead(fetch, {
@@ -40,7 +40,7 @@ const api = cruel.bulkhead(fetch, {
 })
 ```
 
-## timeout
+## Timeout
 
 ```ts
 const api = cruel.withTimeout(fetch, {
@@ -49,7 +49,7 @@ const api = cruel.withTimeout(fetch, {
 })
 ```
 
-## fallback
+## Fallback
 
 ```ts
 const api = cruel.fallback(fetch, {
@@ -58,7 +58,7 @@ const api = cruel.fallback(fetch, {
 })
 ```
 
-## combine patterns
+## Combine Patterns
 
 ```ts
 import { cruel } from "cruel"

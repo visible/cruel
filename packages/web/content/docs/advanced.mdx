@@ -1,9 +1,9 @@
 ---
-title: advanced
-description: presets, global mode, scenarios, fetch interception
+title: Advanced
+description: Presets, global mode, scenarios, and fetch interception
 ---
 
-## presets
+## Presets
 
 ```ts
 cruel.enable(cruel.presets.development)
@@ -14,14 +14,14 @@ cruel.enable(cruel.presets.nightmare)
 cruel.enable(cruel.presets.apocalypse)
 ```
 
-## profiles
+## Profiles
 
 ```ts
 cruel.profile("testing", { fail: 0.2, delay: 100 })
 cruel.useProfile("testing")
 ```
 
-## global mode
+## Global Mode
 
 ```ts
 cruel.enable({ fail: 0.1, delay: [100, 500] })
@@ -30,7 +30,7 @@ cruel.toggle()
 cruel.isEnabled()
 ```
 
-## scoped chaos
+## Scoped Chaos
 
 ```ts
 await cruel.scope(async () => {
@@ -38,7 +38,7 @@ await cruel.scope(async () => {
 }, { fail: 0.2 })
 ```
 
-## fluent api
+## Fluent API
 
 ```ts
 cruel.wrap(fn).fail(0.1)
@@ -48,7 +48,7 @@ cruel.wrap(fn).flaky()
 cruel.wrap(fn).nightmare()
 ```
 
-## factory
+## Factory
 
 ```ts
 import { createCruel } from "cruel"
@@ -56,7 +56,7 @@ import { createCruel } from "cruel"
 const myCruel = createCruel({ delay: 100 })
 ```
 
-## scenarios
+## Scenarios
 
 ```ts
 cruel.scenario("outage", {
@@ -73,7 +73,7 @@ await cruel.play("degraded")
 await cruel.play("recovery")
 ```
 
-## fetch interception
+## Fetch Interception
 
 ```ts
 cruel.patchFetch()
@@ -91,13 +91,13 @@ cruel.intercept(/api\.anthropic\.com/, {
 cruel.unpatchFetch()
 ```
 
-## production rollout checklist
+## Production Rollout Checklist
 
-for production-like chaos drills, keep blast radius controlled:
+For production-like chaos drills, keep blast radius controlled:
 
-1. start with low rates (`0.01` - `0.05`) and increase gradually
-2. run chaos in a scoped block or dedicated test path first
-3. attach `onChaos` and record event types, model ids, and latency
-4. keep retry, fallback, and circuit-breaker logic enabled during tests
-5. run deterministic passes with `cruel.seed(...)` before random passes
-6. stop chaos immediately if error budget or latency thresholds are exceeded
+1. Start with low rates (`0.01` - `0.05`) and increase gradually.
+2. Run chaos in a scoped block or dedicated test path first.
+3. Attach `onChaos` and record event types, model IDs, and latency.
+4. Keep retry, fallback, and circuit-breaker logic enabled during tests.
+5. Run deterministic passes with `cruel.seed(...)` before random passes.
+6. Stop chaos immediately if error budget or latency thresholds are exceeded.
