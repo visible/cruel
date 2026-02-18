@@ -86,7 +86,7 @@ function mark(index: number) {
 	)
 }
 
-export function CursorFrontier() {
+export function LandingFrontier() {
 	return (
 		<section>
 			<div className="mx-auto max-w-[1320px] border-t border-white/5 px-6 py-20 md:py-28">
@@ -134,7 +134,7 @@ export function CursorFrontier() {
 							<div className="mt-6">
 								<Link
 									href={item.href}
-									className="inline-flex items-center gap-1.5 text-sm font-medium text-(--cursor-accent) hover:opacity-80 transition-opacity"
+									className="inline-flex items-center gap-1.5 text-sm font-medium text-(--landing-accent) hover:opacity-80 transition-opacity"
 								>
 									{item.label} <span aria-hidden="true">→</span>
 								</Link>

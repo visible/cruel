@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { CursorNav } from "../../components/landing/cursor-nav"
+import { LandingNav } from "../../components/landing/landing-nav"
 
 const intro = [
 	"3am. Phone buzzes. Production alert. Something is wrong, but not with our code - our code is perfect. Passed every test, every lint check, every code review. The problem? The AI provider started rate limiting us and our retry logic had a subtle bug that nobody ever caught. Because in development, the API never fails.",
@@ -77,13 +77,13 @@ export const metadata: Metadata = {
 
 export default function Page() {
 	return (
-		<main className="cursor-landing relative isolate min-h-screen bg-[#100E0E] text-white selection:bg-white/20 selection:text-white">
+		<main className="landing relative isolate min-h-screen bg-[#100E0E] text-white selection:bg-white/20 selection:text-white">
 			<div className="pointer-events-none absolute inset-y-0 left-0 right-0 hidden md:block">
 				<div className="mx-auto h-full max-w-[1320px] border-x border-x-white/14" />
 			</div>
 
 			<div className="relative z-10">
-				<CursorNav />
+				<LandingNav />
 
 				<section className="pt-28 pb-20 md:pt-36 md:pb-28">
 					<div className="mx-auto max-w-[1320px] px-6">

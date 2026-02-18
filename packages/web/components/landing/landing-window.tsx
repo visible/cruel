@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-export function CursorMacWindow({
+export function LandingWindow({
 	title,
 	bar = true,
 	children,

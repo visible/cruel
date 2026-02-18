@@ -1,9 +1,9 @@
 import type { ReactNode } from "react"
 
-type CursorStageTone = "dune" | "mist" | "sage"
+type LandingStageTone = "dune" | "mist" | "sage"
 
 const toneStyles: Record<
-	CursorStageTone,
+	LandingStageTone,
 	{ backgroundColor: string; backgroundImage: string; shadow: string }
 > = {
 	dune: {
@@ -29,12 +29,12 @@ const toneStyles: Record<
 	},
 }
 
-export function CursorStage({
+export function LandingStage({
 	tone = "dune",
 	square = false,
 	children,
 }: {
-	readonly tone?: CursorStageTone
+	readonly tone?: LandingStageTone
 	readonly square?: boolean
 	readonly children: ReactNode
 }) {

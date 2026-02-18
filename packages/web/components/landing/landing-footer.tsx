@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-export function CursorFooter() {
+export function LandingFooter() {
 	return (
 		<footer>
 			<div className="mx-auto max-w-[1320px] border-t border-white/8 px-6 py-14 md:py-18">

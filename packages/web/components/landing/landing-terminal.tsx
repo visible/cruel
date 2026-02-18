@@ -81,7 +81,7 @@ function style(tone: tone): string {
 	}
 }
 
-export function CursorTerminal() {
+export function LandingTerminal() {
 	const [slot, setslot] = useState(1)
 	const active = scenes[slot]
 	const rows = useMemo(() => active.data, [active])
@@ -103,7 +103,7 @@ export function CursorTerminal() {
 				</div>
 			</div>
 
-			<div className="cursor-terminal-scroll flex-1 overflow-y-auto bg-[#050505] px-4 py-3 font-mono text-[12px] leading-[1.62] tabular-nums">
+			<div className="landing-terminal-scroll flex-1 overflow-y-auto bg-[#050505] px-4 py-3 font-mono text-[12px] leading-[1.62] tabular-nums">
 				{rows.map((row, index) => (
 					<div
 						key={`${active.name}-${index}`}
@@ -115,7 +115,7 @@ export function CursorTerminal() {
 			</div>
 
 			<div className="border-t border-white/8 bg-black/15 px-2 py-1.5">
-				<div className="cursor-terminal-scroll flex items-center gap-1 overflow-x-auto font-mono text-[11px] text-white/45">
+				<div className="landing-terminal-scroll flex items-center gap-1 overflow-x-auto font-mono text-[11px] text-white/45">
 					{scenes.map((scene, index) => {
 						const current = index === slot
 						return (
