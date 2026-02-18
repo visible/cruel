@@ -3,6 +3,11 @@ node_modules
 dist
 *.log
 .env
+.env.local
 .next
 .vercel
 .source
+.DS_Store
+**/.DS_Store
+next-env.d.ts
+**/next-env.d.ts
