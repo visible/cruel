@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import type { ReactNode } from "react"
-import { CursorMacWindow } from "./cursor-mac-window"
-import { CursorStage } from "./cursor-stage"
+import { LandingWindow } from "./landing-window"
+import { LandingStage } from "./landing-stage"
 
 type row = {
 	readonly tone: "cmd" | "code" | "dim"
@@ -51,7 +51,7 @@ function LearnMore({ href, label }: { readonly href: string; readonly label: str
 	return (
 		<Link
 			href={href}
-			className="inline-flex items-center gap-1.5 text-sm font-medium text-(--cursor-accent) hover:opacity-80 transition-opacity"
+			className="inline-flex items-center gap-1.5 text-sm font-medium text-(--landing-accent) hover:opacity-80 transition-opacity"
 		>
 			{label} <span aria-hidden="true">→</span>
 		</Link>
@@ -121,19 +121,19 @@ function Spotlight({
 			</div>
 
 			<div className={flip ? "order-1 md:order-1" : "order-1 md:order-2"}>
-				<CursorStage tone={tone} square>
+				<LandingStage tone={tone} square>
 					<div className="mx-auto w-full max-w-[1160px]">
-						<CursorMacWindow title="" bar={false}>
+						<LandingWindow title="" bar={false}>
 							{window}
-						</CursorMacWindow>
+						</LandingWindow>
 					</div>
-				</CursorStage>
+				</LandingStage>
 			</div>
 		</div>
 	)
 }
 
-export function CursorFeatures() {
+export function LandingFeatures() {
 	return (
 		<section>
 			<div className="mx-auto max-w-[1320px] px-6 pt-20 pb-20 md:pt-28 md:pb-28">

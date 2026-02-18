@@ -4,7 +4,7 @@ import { Github } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
-export function CursorNav() {
+export function LandingNav() {
 	const [scrolled, setScrolled] = useState(false)
 
 	useEffect(() => {
